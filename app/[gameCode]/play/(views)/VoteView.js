@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#15264F",
     borderRadius: 20,
     padding: CARD_PADDING,
-    width: width - 40,
+    width: width * 0.83,
   },
   title: {
     color: "#FFC700",

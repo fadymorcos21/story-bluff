@@ -223,7 +223,7 @@ io.on("connection", (socket) => {
         // fetch updated scores and emit final result
         const finalScores = await redis.hgetall(`game:${pin}:scores`);
         console.log(finalScores);
-        // io.to(pin).emit("voteResult", { votes, scores: finalScores });
+        io.to(pin).emit("voteResult", { votes, scores: finalScores });
       }
       // any other concurrent handlers will see locked===0 and skip scoring
     }
