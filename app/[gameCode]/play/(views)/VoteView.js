@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     // marginVertical: 12,
   },
   card: {
-    flex: 8,
+    flex: 11,
     backgroundColor: "#15264F",
     borderRadius: 20,
     padding: CARD_PADDING,

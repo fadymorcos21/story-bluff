@@ -10,9 +10,12 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useGame } from "../../../../context/GameContext";
-
+import { useLocalSearchParams } from "expo-router";
 export default function RevealView() {
   const { state, dispatch } = useGame();
+
+  const { user } = useLocalSearchParams();
+
   const { players, scores, story, authorId } = state;
   const fullWidth = Dimensions.get("window").width - 40; // for card
 
@@ -44,7 +47,9 @@ export default function RevealView() {
   return (
     <SafeAreaView style={styles.screen}>
       {/* Header */}
-      <Text style={styles.title}>IT WAS {authorName}</Text>
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>IT WAS {authorName}</Text>
+      </View>
 
       {/* Story card */}
       <View style={styles.card}>
@@ -62,17 +67,26 @@ export default function RevealView() {
       </View>
 
       {/* Scoreboard */}
-      <FlatList
-        data={sorted}
-        keyExtractor={(p) => p.id}
-        style={styles.scoreList}
-        renderItem={({ item }) => (
-          <View style={styles.scoreRow}>
-            <Text style={styles.playerName}>{item.username}</Text>
-            <Text style={styles.playerScore}>{scores[item.id] || 0}</Text>
-          </View>
-        )}
-      />
+      <View style={styles.scoreList}>
+        <FlatList
+          data={sorted}
+          keyExtractor={(p) => p.id}
+          // style={styles.scoreList}
+          renderItem={({ item }) => {
+            const isMe = item.username === user;
+            return (
+              <View style={styles.scoreRow}>
+                <Text style={[styles.playerName, isMe && styles.meName]}>
+                  {item.username}
+                </Text>
+                <Text style={[styles.playerScore, isMe && styles.meScore]}>
+                  {scores[item.id] || 0}
+                </Text>
+              </View>
+            );
+          }}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -86,18 +100,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
   },
+  titleContainer: {
+    flex: 16,
+    marginTop: 5,
+    marginBottom: 7,
+    width: width * 0.85,
+    textAlign: "center",
+    justifyContent: "center",
+  },
   title: {
-    flex: 1,
     fontSize: 42,
     fontWeight: "bold",
     color: "#FFC700", // gold
-    marginTop: 44,
     marginBottom: 6,
     width: width * 0.85,
     textAlign: "center",
+    textAlignVertical: "center",
   },
   card: {
-    flex: 4,
+    flex: 20,
     width: width * 0.88,
     backgroundColor: "#FEFBEA",
     borderRadius: 20,
@@ -107,10 +128,9 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   countdownContainer: {
-    flex: 1,
+    flex: 5,
     justifyContent: "center",
     fontSize: 16,
-    marginVertical: 20,
   },
   countdown: {
     color: "#AAA",
@@ -118,7 +138,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   scoreList: {
-    flex: 4,
+    flex: 18,
     width: width * 0.88,
     marginBottom: 32,
   },
@@ -155,5 +175,11 @@ const styles = StyleSheet.create({
   playerScore: {
     color: "#AAA",
     fontSize: 18,
+  },
+  meName: {
+    color: "#3B82F6",
+  },
+  meScore: {
+    color: "#3B82F6",
   },
 });
