@@ -20,6 +20,8 @@ export default function VoteView() {
   const [selected, setSelected] = useState(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [showStory, setShowStory] = useState(false);
+  const [showScores, setShowScores] = useState(false);
+  const toggleScores = () => setShowScores((prev) => !prev);
 
   const voteOptions = players.filter((p) => p.username !== user);
 
@@ -97,39 +99,76 @@ export default function VoteView() {
       {/* header */}
       <View style={styles.header}>
         <Text style={styles.title}>VOTING PHASE</Text>
-        <TouchableOpacity style={styles.scoreboard}>
-          <Text style={styles.scoreboardText}>SCOREBOARD</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.waiting}>Waiting on {waitingName}...</Text>
-
-      {/* card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>CAST YOUR VOTE</Text>
-        <FlatList
-          data={voteOptions}
-          keyExtractor={(p) => p.id}
-          renderItem={renderItem}
-          extraData={votes}
-          style={styles.list}
-        />
-
-        <Text style={styles.youAre}>
-          {selected
-            ? `You ${!hasVoted ? "are voting" : "have voted"} ${players.find((p) => p.id === selected)?.username}`
-            : ""}
-        </Text>
-
-        <TouchableOpacity
-          onPress={finalize}
-          disabled={!selected || hasVoted}
-          style={[styles.finalize, !selected && { opacity: 0.5 }]}
-        >
-          <Text style={styles.finalizeText}>
-            {hasVoted ? "VOTE SUBMITTED" : "FINALIZE"}
+        <TouchableOpacity style={styles.scoreboard} onPress={toggleScores}>
+          <Text style={styles.scoreboardText}>
+            {showScores ? "BACK TO VOTE" : "SCOREBOARD"}
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* card */}
+      {!showScores && (
+        <>
+          <Text style={styles.waiting}>Waiting on {waitingName}...</Text>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>CAST YOUR VOTE</Text>
+            <FlatList
+              data={voteOptions}
+              keyExtractor={(p) => p.id}
+              renderItem={renderItem}
+              extraData={votes}
+              style={styles.list}
+            />
+
+            <Text style={styles.youAre}>
+              {selected
+                ? `You ${!hasVoted ? "are voting" : "have voted"} ${players.find((p) => p.id === selected)?.username}`
+                : ""}
+            </Text>
+
+            <TouchableOpacity
+              onPress={finalize}
+              disabled={!selected || hasVoted}
+              style={[styles.finalize, !selected && { opacity: 0.5 }]}
+            >
+              <Text style={styles.finalizeText}>
+                {hasVoted ? "VOTE SUBMITTED" : "FINALIZE"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
+      {showScores && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>LEADERBOARD</Text>
+
+          <FlatList
+            data={players}
+            keyExtractor={(p) => p.id}
+            renderItem={({ item }) => {
+              const isYou = item.username === user;
+              return (
+                <View style={styles.scoreRow}>
+                  <Text
+                    style={[styles.playerName, isYou && styles.currentUserText]}
+                  >
+                    {item.username}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.playerScore,
+                      isYou && styles.currentUserText,
+                    ]}
+                  >
+                    {scores[item.id] || 0}
+                  </Text>
+                </View>
+              );
+            }}
+          />
+        </View>
+      )}
 
       {!showStory ? (
         <View style={styles.showStoryBtnView}>
@@ -175,6 +214,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    width: width * 0.83,
     // marginVertical: 20,
   },
   waiting: {
@@ -280,6 +320,16 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
+
+  scoreRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomColor: "rgba(255,255,255,0.1)",
+    borderBottomWidth: 1,
+  },
+  playerName: { color: "#FFF", fontSize: 16 },
+  playerScore: { color: "#FFF", fontSize: 16, fontWeight: "600" },
   optionDisabled: {
     // visually dim locked-in options
     opacity: 0.5,
@@ -322,5 +372,8 @@ const styles = StyleSheet.create({
     color: "#15264F",
     fontSize: 16,
     lineHeight: 22,
+  },
+  currentUserText: {
+    color: "#19bbe3", // light-blue for “you”
   },
 });
