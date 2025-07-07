@@ -55,14 +55,6 @@ function reducer(state, action) {
         scores: action.scores,
       };
 
-    // case "ROUND_PREPARED":
-    //   return {
-    //     ...state,
-    //     round: action.round,
-    //     story: action.text,
-    //     authorId: action.authorId,
-    //   };
-
     case "END_GAME":
       return { ...state, phase: "FINAL" };
 

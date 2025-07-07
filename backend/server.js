@@ -239,39 +239,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  // socket.on("startGame", async (pin) => {
-  //   const host = await redis.get(`game:${pin}:host`);
-  //   if (socket.id !== host) return;
-
-  //   // —— NEW: enforce 3‐player minimum ——
-  //   const playersRaw = await redis.hgetall(`game:${pin}:players`);
-  //   const playerCount = Object.keys(playersRaw).length;
-  //   if (playerCount < 3) {
-  //     return socket.emit(
-  //       "errorMessage",
-  //       `Need at least 3 players to start (currently ${playerCount}).`
-  //     );
-  //   }
-
-  //   await redis.del(`game:${pin}:votes`);
-
-  //   await redis.set(`game:${pin}:currentRound`, 1);
-
-  //   const storiesRaw = await redis.hgetall(`game:${pin}:stories`);
-  //   const authors = Object.keys(storiesRaw);
-  //   const randomAuthor = authors[Math.floor(Math.random() * authors.length)];
-
-  //   await redis.set(`game:${pin}:currentAuthor`, randomAuthor);
-
-  //   const firstStory = JSON.parse(storiesRaw[randomAuthor])[0];
-
-  //   io.to(pin).emit("gameStarted", {
-  //     round: 1,
-  //     authorId: randomAuthor,
-  //     text: firstStory,
-  //   });
-  // });
-
   socket.on("vote", async ({ pin, choiceId }) => {
     // 1) record this vote
     await redis.hset(`game:${pin}:votes`, socket.id, choiceId);

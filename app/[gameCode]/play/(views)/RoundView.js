@@ -10,6 +10,37 @@ export default function RoundView() {
   const progress = useRef(new Animated.Value(0)).current;
   const fullWidth = Dimensions.get("window").width - 40; // account for 20px padding each side
 
+  // All brainstormed text ideas in one array
+  const messages = [
+    // 🎭 Bluff & Suspense Theme
+    "Could *you* keep a straight face?",
+    "The author is among you...",
+    "Don’t let your face give it away.",
+    "Everyone pretend it’s not yours.",
+    "Blend in. Bluff hard.",
+
+    // 🕵️ Mystery/Sleuth Vibes
+    "Analyze every word...",
+    "Who would write this?",
+    "Your detective skills start now.",
+    "Watch for nervous laughter...",
+
+    // 🎤 Fun & Light-Hearted
+    "Story time with a twist.",
+    "Bet you didn’t expect *that*.",
+    "Somebody here lived this…",
+    "Get ready to spill the beans.",
+
+    // 🔄 Instructional / Neutral
+    "You’ll vote in just a moment…",
+    "Reading in progress...",
+    "Get familiar with the story…",
+    "Stay tuned — voting starts soon.",
+  ];
+
+  // Pick one at random
+  const catchPhrase = messages[Math.floor(Math.random() * messages.length)];
+
   useEffect(() => {
     // animate from 0 → 1 over 30s, then kick off voting
     Animated.timing(progress, {
@@ -42,7 +73,7 @@ export default function RoundView() {
       </View>
 
       <View style={styles.subtitle}>
-        <Text style={styles.subtitleText}>Could you keep a straight face?</Text>
+        <Text style={styles.subtitleText}>{catchPhrase}</Text>
       </View>
 
       <Text style={styles.footer}>Get ready to vote…</Text>
