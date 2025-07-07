@@ -12,25 +12,25 @@ import {
 import { useGame } from "../../../../context/GameContext";
 import { useLocalSearchParams } from "expo-router";
 export default function RevealView() {
-  const { state, dispatch } = useGame();
+  const { state, dispatch, socket } = useGame();
 
-  const { user } = useLocalSearchParams();
+  const { gameCode, user } = useLocalSearchParams();
 
-  const { players, scores, story, authorId } = state;
-  const fullWidth = Dimensions.get("window").width - 40; // for card
+  const { players, scores, story, authorId, round } = state;
 
   // Get the author username
   const authorName =
     players.find((p) => p.id === authorId)?.username.toUpperCase() || "";
 
   // Countdown logic
-  const [countdown, setCountdown] = useState(15);
+  const [countdown, setCountdown] = useState(7);
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((c) => {
         if (c <= 1) {
           clearInterval(timer);
-          // dispatch({ type: "NEXT_ROUND" });
+          socket.emit("nextRound", gameCode);
+
           return 0;
         }
         return c - 1;

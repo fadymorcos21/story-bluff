@@ -110,11 +110,35 @@ io.on("connection", (socket) => {
     }
   });
 
+  /**
+   * Pick `count` distinct random items from `array`.
+   * Does not mutate the original.
+   */
+  function sample(array, count) {
+    const arr = array.slice(); // copy so we don’t destroy the original
+    const n = arr.length;
+    const k = Math.min(count, n); // in case count > length
+
+    // Fisher–Yates only up to the k-th position:
+    for (let i = 0; i < k; i++) {
+      // pick a random index from [i…n-1]
+      const j = i + Math.floor(Math.random() * (n - i));
+      // swap element i ↔ j
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    // the first k elements are now a random sample
+    return arr.slice(0, k);
+  }
+
+  // In your server.js (ensure shuffle() is defined above this handler):
+
   socket.on("startGame", async (pin) => {
+    // Only the host may start the game
     const host = await redis.get(`game:${pin}:host`);
     if (socket.id !== host) return;
 
-    // —— NEW: enforce 3‐player minimum ——
+    // Enforce a minimum of 3 players
     const playersRaw = await redis.hgetall(`game:${pin}:players`);
     const playerCount = Object.keys(playersRaw).length;
     if (playerCount < 3) {
@@ -124,61 +148,128 @@ io.on("connection", (socket) => {
       );
     }
 
-    await redis.del(`game:${pin}:votes`);
+    // Flatten all submitted stories into [{ authorId, text }, ...]
+    const storiesRaw = await redis.hgetall(`game:${pin}:stories`);
+    let allStories = Object.entries(storiesRaw).flatMap(([authorId, json]) =>
+      JSON.parse(json).map((text) => ({ authorId, text }))
+    );
 
+    console.log("storiesRaw", storiesRaw);
+    console.log("All: ", allStories);
+    // Shuffle and pick exactly 8 stories
+    allStories = sample(allStories, 8);
+
+    console.log("Shuffled", allStories);
+    // Prepend a dummy null entry so we can index by 1…8
+    allStories.unshift(null);
+
+    // Store the story list and initialize currentRound to 1
+    await redis.set(`game:${pin}:storyList`, JSON.stringify(allStories));
     await redis.set(`game:${pin}:currentRound`, 1);
 
-    const storiesRaw = await redis.hgetall(`game:${pin}:stories`);
-    const authors = Object.keys(storiesRaw);
-    const randomAuthor = authors[Math.floor(Math.random() * authors.length)];
-
-    await redis.set(`game:${pin}:currentAuthor`, randomAuthor);
-
-    const firstStory = JSON.parse(storiesRaw[randomAuthor])[0];
-
+    // Emit the first round using allStories[1]
+    const { authorId, text } = allStories[1];
+    await redis.set(`game:${pin}:currentAuthor`, authorId);
     io.to(pin).emit("gameStarted", {
       round: 1,
-      authorId: randomAuthor,
-      text: firstStory,
+      authorId,
+      text,
     });
   });
 
-  // socket.on("vote", async ({ pin, choiceId }) => {
-  //   // 1) record this vote
-  //   await redis.hset(`game:${pin}:votes`, socket.id, choiceId);
+  // server.js (inside io.on("connection", …))
+  socket.on("nextRound", async (pin) => {
+    // only the host can trigger the next round
+    const host = await redis.get(`game:${pin}:host`);
+    if (socket.id !== host) return;
 
-  //   // 2) fetch the up-to-the-moment votes map
-  //   const votes = await redis.hgetall(`game:${pin}:votes`);
+    // pull down your pre‐shuffled storyList and current round
+    const list = JSON.parse(await redis.get(`game:${pin}:storyList`));
+    const current = Number(await redis.get(`game:${pin}:currentRound`)) || 1;
+    const next = current + 1;
 
-  //   // 3) broadcast intermediate update so everyone can stack initials
-  //   console.log(votes);
-  //   io.to(pin).emit("votesUpdate", votes);
+    // if we’ve exhausted the list, end the game
+    if (next >= list.length) {
+      return io.to(pin).emit("gameEnded");
+    }
 
-  //   // 4) if everyone (except author) has voted, tally and emit final results
-  //   const authorId = await redis.get(`game:${pin}:currentAuthor`);
-  //   const allPlayers = await redis.hgetall(`game:${pin}:players`);
-  //   const voterIds = Object.keys(allPlayers).filter((id) => id !== authorId);
+    // —— NEW: clear out last round’s votes ——
+    await redis.del(`game:${pin}:votes`);
 
-  //   if (voterIds.every((id) => votes[id])) {
-  //     // tally scores
-  //     let correctCount = 0;
-  //     for (const voter of voterIds) {
-  //       if (votes[voter] === authorId) {
-  //         correctCount++;
-  //         // 2 points for a correct guess
-  //         await redis.hincrby(`game:${pin}:scores`, voter, 2);
-  //       }
-  //     }
-  //     // author gets 1 point for each wrong guess
-  //     const wrongCount = voterIds.length - correctCount;
-  //     if (wrongCount > 0) {
-  //       await redis.hincrby(`game:${pin}:scores`, authorId, wrongCount);
-  //     }
+    // advance the round pointer and set the new author
+    await redis.set(`game:${pin}:currentRound`, next);
+    const { authorId, text } = list[next];
+    await redis.set(`game:${pin}:currentAuthor`, authorId);
 
-  //     const scores = await redis.hgetall(`game:${pin}:scores`);
-  //     console.log(scores);
-  //     // io.to(pin).emit("voteResult", { votes, scores });
+    // tell everyone to move into the next round
+    io.to(pin).emit("nextRound", { round: next, authorId, text });
+  });
+
+  socket.on("prepareNextRound", async ({ pin, nextRound }) => {
+    // 1) Load your stored 1-based story list
+    const raw = await redis.get(`game:${pin}:storyList`);
+    if (!raw) {
+      console.log("end1");
+      return io.to(pin).emit("endGame");
+    }
+    const list = JSON.parse(raw);
+
+    // 2) Validate the requested round
+    const idx = Number(nextRound);
+    if (isNaN(idx) || idx < 1 || idx >= list.length) {
+      console.log("end2");
+      return socket.emit("errorMessage", `Invalid round: ${nextRound}`);
+    }
+
+    // 3) Grab the story for this round
+    const { authorId, text } = list[idx];
+
+    // 4) Update Redis so server-state stays in sync
+    await redis.set(`game:${pin}:currentRound`, idx);
+    await redis.set(`game:${pin}:currentAuthor`, authorId);
+
+    // 5) Emit back to **that** client (or to all if you prefer)
+    //    Here we target just the requester so each RevealView can fetch on mount
+
+    console.log(`sending back round ${idx}`);
+    socket.emit("roundPrepared", {
+      round: idx,
+      authorId,
+      text,
+    });
+  });
+
+  // socket.on("startGame", async (pin) => {
+  //   const host = await redis.get(`game:${pin}:host`);
+  //   if (socket.id !== host) return;
+
+  //   // —— NEW: enforce 3‐player minimum ——
+  //   const playersRaw = await redis.hgetall(`game:${pin}:players`);
+  //   const playerCount = Object.keys(playersRaw).length;
+  //   if (playerCount < 3) {
+  //     return socket.emit(
+  //       "errorMessage",
+  //       `Need at least 3 players to start (currently ${playerCount}).`
+  //     );
   //   }
+
+  //   await redis.del(`game:${pin}:votes`);
+
+  //   await redis.set(`game:${pin}:currentRound`, 1);
+
+  //   const storiesRaw = await redis.hgetall(`game:${pin}:stories`);
+  //   const authors = Object.keys(storiesRaw);
+  //   const randomAuthor = authors[Math.floor(Math.random() * authors.length)];
+
+  //   await redis.set(`game:${pin}:currentAuthor`, randomAuthor);
+
+  //   const firstStory = JSON.parse(storiesRaw[randomAuthor])[0];
+
+  //   io.to(pin).emit("gameStarted", {
+  //     round: 1,
+  //     authorId: randomAuthor,
+  //     text: firstStory,
+  //   });
   // });
 
   socket.on("vote", async ({ pin, choiceId }) => {

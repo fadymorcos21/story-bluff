@@ -28,7 +28,17 @@ function reducer(state, action) {
         round: action.round,
         story: action.text,
         authorId: action.authorId,
-        votes: {}, // reset votes for new round
+        votes: {},
+      };
+
+    case "NEXT_ROUND":
+      return {
+        ...state,
+        phase: "ROUND",
+        round: action.round,
+        story: action.text,
+        authorId: action.authorId,
+        votes: {},
       };
 
     case "START_VOTE":
@@ -45,13 +55,13 @@ function reducer(state, action) {
         scores: action.scores,
       };
 
-    case "NEXT_ROUND":
-      return {
-        ...state,
-        phase: "ROUND",
-        round: state.round + 1,
-        votes: {},
-      };
+    // case "ROUND_PREPARED":
+    //   return {
+    //     ...state,
+    //     round: action.round,
+    //     story: action.text,
+    //     authorId: action.authorId,
+    //   };
 
     case "END_GAME":
       return { ...state, phase: "FINAL" };
@@ -88,6 +98,11 @@ export function GameProvider({ children }) {
       router.replace(`/${gameCode}/play?user=${encodeURIComponent(user)}`);
     });
 
+    // when host starts, backend emits this
+    socket.on("nextRound", ({ round, authorId, text }) => {
+      dispatch({ type: "NEXT_ROUND", round, authorId, text });
+    });
+
     socket.on("votesUpdate", (votes) => {
       dispatch({ type: "VOTES_UPDATE", votes });
       console.log(votes);
@@ -103,6 +118,11 @@ export function GameProvider({ children }) {
       alert(msg);
       router.replace("/");
     });
+
+    // listen for the server preparing the next round
+    socket.on("roundPrepared", ({ round, authorId, text }) =>
+      dispatch({ type: "ROUND_PREPARED", round, authorId, text })
+    );
 
     return () => {
       socket.disconnect();

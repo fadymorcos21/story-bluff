@@ -98,7 +98,7 @@ export default function VoteView() {
     <SafeAreaView style={styles.screen}>
       {/* header */}
       <View style={styles.header}>
-        <Text style={styles.title}>VOTING PHASE</Text>
+        <Text style={styles.title}>ROUND {state.round} VOTING PHASE</Text>
         <TouchableOpacity style={styles.scoreboard} onPress={toggleScores}>
           <Text style={styles.scoreboardText}>
             {showScores ? "BACK TO VOTE" : "SCOREBOARD"}
@@ -211,8 +211,8 @@ const styles = StyleSheet.create({
   },
   header: {
     flex: 4,
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: "col",
+    justifyContent: "center",
     alignItems: "center",
     width: width * 0.83,
     // marginVertical: 20,
@@ -235,8 +235,11 @@ const styles = StyleSheet.create({
     color: "#FFC700",
     fontSize: 24,
     fontWeight: "bold",
+    paddingTop: 15,
+    paddingBottom: 10,
   },
   scoreboard: {
+    marginTop: 5,
     borderColor: "#FFC700",
     borderWidth: 2,
     borderRadius: 20,
