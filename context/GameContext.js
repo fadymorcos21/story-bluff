@@ -58,6 +58,18 @@ function reducer(state, action) {
     case "END_GAME":
       return { ...state, phase: "FINAL" };
 
+    case "RESET":
+      // wipe out everything except the players list
+      return {
+        ...state,
+        phase: "LOBBY",
+        round: 0,
+        story: null,
+        authorId: null,
+        votes: {},
+        scores: {},
+      };
+
     default:
       return state;
   }
@@ -115,6 +127,15 @@ export function GameProvider({ children }) {
     socket.on("roundPrepared", ({ round, authorId, text }) =>
       dispatch({ type: "ROUND_PREPARED", round, authorId, text })
     );
+
+    // when all stories exhausted
+    socket.on("gameEnded", () => dispatch({ type: "END_GAME" }));
+
+    // when host resets to lobby
+    socket.on("gameReset", () => {
+      dispatch({ type: "RESET" });
+      router.replace(`/${gameCode}?user=${encodeURIComponent(user)}`);
+    });
 
     return () => {
       socket.disconnect();

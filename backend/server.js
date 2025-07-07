@@ -157,7 +157,7 @@ io.on("connection", (socket) => {
     console.log("storiesRaw", storiesRaw);
     console.log("All: ", allStories);
     // Shuffle and pick exactly 8 stories
-    allStories = sample(allStories, 8);
+    allStories = sample(allStories, 2);
 
     console.log("Shuffled", allStories);
     // Prepend a dummy null entry so we can index by 1…8
@@ -237,6 +237,51 @@ io.on("connection", (socket) => {
       authorId,
       text,
     });
+  });
+
+  // server.js (inside io.on("connection"))
+  socket.on("resetGame", async (pin) => {
+    // only host can reset
+    const hostId = await redis.get(`game:${pin}:host`);
+    if (socket.id !== hostId) return;
+
+    // 1) clear per‐round state
+    const playersRaw = await redis.hgetall(`game:${pin}:players`);
+    const multi = redis.multi();
+
+    // reset all scores to 0
+    Object.keys(playersRaw).forEach((pid) => {
+      multi.hset(`game:${pin}:scores`, pid, 0);
+    });
+
+    // delete stories, submissions, votes, storyList, currentRound, currentAuthor
+    multi.del(
+      `game:${pin}:stories`,
+      `game:${pin}:submissions`,
+      `game:${pin}:votes`,
+      `game:${pin}:storyList`,
+      `game:${pin}:currentRound`,
+      `game:${pin}:currentAuthor`
+    );
+
+    // reset each player.ready = false
+    Object.entries(playersRaw).forEach(([pid, json]) => {
+      const p = JSON.parse(json);
+      p.ready = false;
+      multi.hset(`game:${pin}:players`, pid, JSON.stringify(p));
+    });
+
+    await multi.exec();
+
+    // 2) broadcast updated lobby state
+    const updatedRaw = await redis.hgetall(`game:${pin}:players`);
+    const updatedList = Object.entries(updatedRaw).map(([_, str]) =>
+      JSON.parse(str)
+    );
+    io.to(pin).emit("playersUpdate", updatedList);
+
+    // 3) notify clients to reset their UI
+    io.to(pin).emit("gameReset");
   });
 
   socket.on("vote", async ({ pin, choiceId }) => {

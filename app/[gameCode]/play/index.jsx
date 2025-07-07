@@ -3,6 +3,7 @@ import { useGame } from "../../../context/GameContext";
 import RevealView from "./(views)/RevealView";
 import RoundView from "./(views)/RoundView";
 import VoteView from "./(views)/VoteView";
+import FinalView from "./(views)/FinalView";
 // … potentially FinalView later
 
 export default function Play() {
@@ -15,8 +16,8 @@ export default function Play() {
       return <VoteView />;
     case "REVEAL":
       return <RevealView />;
-    // case "FINAL":
-    //   return <FinalView />;
+    case "FINAL":
+      return <FinalView />;
     default:
       return null; // or a spinner
   }
