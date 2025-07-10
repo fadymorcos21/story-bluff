@@ -1,4 +1,6 @@
 // app/index.jsx
+import { BACKEND_URL, TEST_MODE } from "@env";
+
 import { useState, useRef } from "react";
 import {
   SafeAreaView,
@@ -21,31 +23,38 @@ import { useRouter } from "expo-router";
 import { connectSocket } from "../services/socket";
 import "./../global.css";
 
-const BACKEND_URL = "http://192.168.2.98:5000";
+// Testing Purposes
+const FEATURE_TEST_MODE = TEST_MODE?.toLowerCase() === "true";
 
 const generateRandomUsername = (length = 6) =>
   Math.random()
     .toString(36) // turn to base-36 (0–9, a–z)
     .substring(2, 2 + length);
+
 export default function Home() {
   const router = useRouter();
 
-  const [username, setUsername] = useState(
-    () => `user_${generateRandomUsername()}`
-  );
+  const initialUsername = FEATURE_TEST_MODE
+    ? `user_${generateRandomUsername()}`
+    : "";
+
+  const [username, setUsername] = useState(initialUsername);
   const [isKeyboardVisible, setKeyboardVisible] = useState("");
 
   // FOR TESTNG - to remove from here
   const anim = useRef(new Animated.Value(0)).current;
 
-  // FOR TESTNG - to remove from here
-  Animated.timing(anim, {
-    toValue: 1,
-    duration: 300,
-    useNativeDriver: false,
-  }).start();
-  // FOR TESTNG - to set back to false
-  const [revealed, setRevealed] = useState(true);
+  // TEST-START   - uncomment for testing
+  {
+    FEATURE_TEST_MODE &&
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+  }
+  // TEST-END
+  const [revealed, setRevealed] = useState(FEATURE_TEST_MODE ? true : false);
   const [code, setCode] = useState("");
   const [createBtnWidth, setCreateBtnWidth] = useState(null);
   const screenWidth = Dimensions.get("window").width - 32;
@@ -73,14 +82,14 @@ export default function Home() {
 
   const handleJoinPress = () => {
     if (!revealed) {
-      setRevealed(true);
+      setRevealed(FEATURE_TEST_MODE ? false : true);
       Animated.timing(anim, {
         toValue: 1,
         duration: 300,
         useNativeDriver: false,
       }).start();
     } else {
-      if (!username.trim() || !code.trim()) {
+      if (!username.trim() || !code.toUpperCase().trim()) {
         return Alert.alert("Enter both username and game pin");
       }
 
@@ -88,9 +97,11 @@ export default function Home() {
       // listen for errors
       socket.on("errorMessage", (msg) => Alert.alert("Error", msg));
 
-      socket.emit("joinGame", { pin: code, username });
+      socket.emit("joinGame", { pin: code.toUpperCase(), username });
       // navigate to the same lobby route as create
-      router.replace(`/${code}?user=${encodeURIComponent(username)}`);
+      router.replace(
+        `/${code.toUpperCase()}?user=${encodeURIComponent(username)}`
+      );
     }
   };
 

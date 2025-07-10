@@ -13,8 +13,11 @@ const redis = new Redis({
 });
 
 // Helpers
-function makePin(length = 1) {
-  return [...Array(length)].map(() => Math.random().toString(36)[2]).join("");
+function makePin(length = 3) {
+  return [...Array(length)]
+    .map(() => Math.random().toString(36)[2])
+    .join("")
+    .toUpperCase();
 }
 
 const app = express();
@@ -157,7 +160,7 @@ io.on("connection", (socket) => {
     console.log("storiesRaw", storiesRaw);
     console.log("All: ", allStories);
     // Shuffle and pick exactly 8 stories
-    allStories = sample(allStories, 2);
+    allStories = sample(allStories, 8);
 
     console.log("Shuffled", allStories);
     // Prepend a dummy null entry so we can index by 1…8
