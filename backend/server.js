@@ -13,7 +13,7 @@ const redis = new Redis({
 });
 
 // Helpers
-function makePin(length = 3) {
+function makePin(length = 1) {
   return [...Array(length)]
     .map(() => Math.random().toString(36)[2])
     .join("")

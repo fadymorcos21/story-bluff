@@ -1,4 +1,6 @@
 // app/[gameCode]/play/views/RevealView.js
+import { BACKEND_URL, TEST_MODE } from "@env";
+
 import React, { useEffect, useState, useRef } from "react";
 import {
   View,
@@ -12,6 +14,9 @@ import {
 import { useGame } from "../../../../context/GameContext";
 import { useLocalSearchParams } from "expo-router";
 export default function RevealView() {
+  // Testing
+  const FEATURE_TEST_MODE = TEST_MODE?.toLowerCase() === "true";
+
   const { state, dispatch, socket } = useGame();
 
   const { gameCode, user } = useLocalSearchParams();
@@ -23,7 +28,7 @@ export default function RevealView() {
     players.find((p) => p.id === authorId)?.username.toUpperCase() || "";
 
   // Countdown logic
-  const [countdown, setCountdown] = useState(10);
+  const [countdown, setCountdown] = useState(FEATURE_TEST_MODE ? 1 : 15);
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((c) => {

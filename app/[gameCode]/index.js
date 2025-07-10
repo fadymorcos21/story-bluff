@@ -33,18 +33,18 @@ export default function GameLobby() {
   const iAmReady = me.ready;
   const allReady = players.length >= 3 && players.every((p) => p.ready);
 
-  // UNTEST-START   - uncomment for gameplay
-  const [stories, setStories] = useState(Array(MIN_STORIES).fill(""));
-  // UNTEST-END
+  // GAMEPLAY-MODE-START   - uncomment for gameplay
+  // const [stories, setStories] = useState(Array(MIN_STORIES).fill(""));
+  // GAMEPLAY-MODE-END
 
   // TEST-START   - uncomment for testing
-  // const [stories, setStories] = useState([]);
+  const [stories, setStories] = useState([]);
 
-  // useEffect(() => {
-  //   if (me?.username && stories.length === 0) {
-  //     setStories(Array(MIN_STORIES).fill(`${me.username} `.repeat(4)));
-  //   }
-  // }, [me, stories.length]);
+  useEffect(() => {
+    if (me?.username && stories.length === 0) {
+      setStories(Array(MIN_STORIES).fill(`${me.username} `.repeat(4)));
+    }
+  }, [me, stories.length]);
   // TEST-END
 
   const [editingIndex, setEditingIndex] = useState(null);
