@@ -45,7 +45,7 @@ export default function RoundView() {
     // animate from 0 → 1 over 30s, then kick off voting
     Animated.timing(progress, {
       toValue: 1,
-      duration: 7_000,
+      duration: 1_000,
       useNativeDriver: false,
     }).start(() => {
       dispatch({ type: "START_VOTE" });

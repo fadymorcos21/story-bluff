@@ -1,5 +1,5 @@
 // app/[gameCode]/index.js
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -24,6 +24,7 @@ export default function GameLobby() {
   const router = useRouter();
   const { state, socket } = useGame();
   const { players } = state;
+  // socket.emit("joinGame", { pin: gameCode, username: user });
 
   // figure out current user & host / ready states
   const me = players.find((p) => p.username === user) || {};

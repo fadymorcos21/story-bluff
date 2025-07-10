@@ -23,7 +23,7 @@ export default function RevealView() {
     players.find((p) => p.id === authorId)?.username.toUpperCase() || "";
 
   // Countdown logic
-  const [countdown, setCountdown] = useState(7);
+  const [countdown, setCountdown] = useState(1);
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((c) => {

@@ -132,10 +132,10 @@ export function GameProvider({ children }) {
     socket.on("gameEnded", () => dispatch({ type: "END_GAME" }));
 
     // when host resets to lobby
-    socket.on("gameReset", () => {
-      dispatch({ type: "RESET" });
-      router.replace(`/${gameCode}?user=${encodeURIComponent(user)}`);
-    });
+    // socket.on("gameReset", () => {
+    //   dispatch({ type: "RESET" });
+    //   router.replace(`/${gameCode}?user=${encodeURIComponent(user)}`);
+    // });
 
     return () => {
       socket.disconnect();

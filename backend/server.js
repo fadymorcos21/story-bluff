@@ -22,7 +22,7 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/create", async (req, res) => {
-  console.log("A");
+  console.log("CREATED");
   let pin;
   do {
     pin = makePin();
@@ -239,67 +239,63 @@ io.on("connection", (socket) => {
     });
   });
 
-  // server.js (inside io.on("connection"))
+  // inside io.on("connection", socket => { … })
+
   socket.on("resetGame", async (pin) => {
-    // only host can reset
+    // only the host may reset
     const hostId = await redis.get(`game:${pin}:host`);
     if (socket.id !== hostId) return;
 
-    // 1) clear per‐round state
-    const playersRaw = await redis.hgetall(`game:${pin}:players`);
-    const multi = redis.multi();
+    // 1) gather any leftover lock keys for all rounds
+    const lockKeys = await redis.keys(`game:${pin}:round:*:scored`);
 
-    // reset all scores to 0
-    Object.keys(playersRaw).forEach((pid) => {
-      multi.hset(`game:${pin}:scores`, pid, 0);
-    });
+    // 1) delete all per‐game state (except the host key)
+    const multi = redis
+      .multi()
+      .del(
+        `game:${pin}:players`,
+        `game:${pin}:scores`,
+        `game:${pin}:stories`,
+        `game:${pin}:submissions`,
+        `game:${pin}:votes`,
+        `game:${pin}:storyList`,
+        `game:${pin}:currentRound`,
+        `game:${pin}:currentAuthor`
+      );
 
-    // delete stories, submissions, votes, storyList, currentRound, currentAuthor
-    multi.del(
-      `game:${pin}:stories`,
-      `game:${pin}:submissions`,
-      `game:${pin}:votes`,
-      `game:${pin}:storyList`,
-      `game:${pin}:currentRound`,
-      `game:${pin}:currentAuthor`
-    );
-
-    // reset each player.ready = false
-    Object.entries(playersRaw).forEach(([pid, json]) => {
-      const p = JSON.parse(json);
-      p.ready = false;
-      multi.hset(`game:${pin}:players`, pid, JSON.stringify(p));
-    });
+    if (lockKeys.length) {
+      lockKeys.forEach((lk) => multi.del(lk));
+      console.log("clearing old locks:", lockKeys);
+    }
 
     await multi.exec();
 
-    // 2) broadcast updated lobby state
-    const updatedRaw = await redis.hgetall(`game:${pin}:players`);
-    const updatedList = Object.entries(updatedRaw).map(([_, str]) =>
-      JSON.parse(str)
-    );
-    io.to(pin).emit("playersUpdate", updatedList);
-
-    // 3) notify clients to reset their UI
-    io.to(pin).emit("gameReset");
+    // 2) force every socket to leave the room so the lobby is empty
+    //    (requires Socket.IO v4+)
+    await io.in(pin).socketsLeave(pin);
   });
 
   socket.on("vote", async ({ pin, choiceId }) => {
+    console.log("voted");
+
     // 1) record this vote
     await redis.hset(`game:${pin}:votes`, socket.id, choiceId);
 
     // 2) fetch the up‐to‐the‐moment votes map
     const votes = await redis.hgetall(`game:${pin}:votes`);
-
+    console.log("VOTES: ", votes);
     // 3) broadcast intermediate update so everyone can stack initials
     io.to(pin).emit("votesUpdate", votes);
 
     // 4) if everyone (except author) has voted, tally and emit final results
     const authorId = await redis.get(`game:${pin}:currentAuthor`);
     const allPlayers = await redis.hgetall(`game:${pin}:players`);
-    const voterIds = Object.keys(allPlayers).filter((id) => id !== authorId);
+    console.log("All players", allPlayers);
+    const voterIds = Object.keys(allPlayers).filter(() => true);
+    console.log("voterIds", voterIds);
 
     if (voterIds.every((id) => votes[id])) {
+      console.log("all players voted");
       // get this round number
       const round = await redis.get(`game:${pin}:currentRound`);
       // build a lock key for this round
@@ -308,6 +304,7 @@ io.on("connection", (socket) => {
       // attempt to acquire the lock—only the first caller will succeed
       const locked = await redis.setnx(lockKey, "1");
       if (locked === 1) {
+        console.log("entered lock");
         // tally correct guesses
         let correctCount = 0;
         for (const voter of voterIds) {

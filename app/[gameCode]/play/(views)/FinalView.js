@@ -1,5 +1,4 @@
 // app/[gameCode]/play/views/FinalView.js
-import React from "react";
 import {
   SafeAreaView,
   View,
@@ -9,6 +8,7 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
+import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useGame } from "../../../../context/GameContext";
 
@@ -17,6 +17,10 @@ export default function FinalView() {
   const router = useRouter();
   const { state, socket } = useGame();
   const { players, scores } = state;
+
+  useEffect(() => {
+    socket.emit("resetGame", gameCode);
+  }, [socket, gameCode]);
 
   // sort descending by score
   const sorted = [...players].sort(
@@ -35,7 +39,8 @@ export default function FinalView() {
   const amIWinner = winners.some((p) => p.username === user);
 
   const handlePlayAgain = () => {
-    socket.emit("resetGame", gameCode);
+    socket.emit("joinGame", { pin: gameCode, username: user });
+    // navigate to the same lobby route as create
     router.replace(`/${gameCode}?user=${encodeURIComponent(user)}`);
   };
 

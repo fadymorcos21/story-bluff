@@ -1,5 +1,5 @@
 // app/index.jsx
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import {
   SafeAreaView,
   View,
