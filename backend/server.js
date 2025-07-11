@@ -13,7 +13,7 @@ const redis = new Redis({
 });
 
 // Helpers
-function makePin(length = 1) {
+function makePin(length = 3) {
   return [...Array(length)]
     .map(() => Math.random().toString(36)[2])
     .join("")
@@ -265,9 +265,6 @@ io.on("connection", (socket) => {
     const hostId = await redis.get(`game:${pin}:host`);
     if (socket.id !== hostId) return;
 
-    // Game over
-    multi.del(`game:${pin}:inProgress`);
-
     // 1) gather any leftover lock keys for all rounds
     const lockKeys = await redis.keys(`game:${pin}:round:*:scored`);
 
@@ -282,7 +279,8 @@ io.on("connection", (socket) => {
         `game:${pin}:votes`,
         `game:${pin}:storyList`,
         `game:${pin}:currentRound`,
-        `game:${pin}:currentAuthor`
+        `game:${pin}:currentAuthor`,
+        `game:${pin}:inProgress`
       );
 
     if (lockKeys.length) {
@@ -313,7 +311,7 @@ io.on("connection", (socket) => {
     const authorId = await redis.get(`game:${pin}:currentAuthor`);
     const allPlayers = await redis.hgetall(`game:${pin}:players`);
     console.log("All players", allPlayers);
-    const voterIds = Object.keys(allPlayers).filter(() => true);
+    const voterIds = Object.keys(allPlayers).filter((id) => id !== authorId);
     console.log("voterIds", voterIds);
 
     if (voterIds.every((id) => votes[id])) {
@@ -353,6 +351,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", async () => {
     const keys = await redis.keys("game:*:players");
+    console.log("socket left:", socket.id);
     for (const key of keys) {
       const pin = key.split(":")[1];
       if (!(await redis.hexists(key, socket.id))) continue;

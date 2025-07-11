@@ -8,6 +8,7 @@ import FinalView from "./(views)/FinalView";
 
 export default function Play() {
   const { state } = useGame();
+  console.log(`[PLAY ${state.phase}] rendering phase`, state.phase);
 
   switch (state.phase) {
     case "ROUND":
@@ -19,6 +20,6 @@ export default function Play() {
     case "FINAL":
       return <FinalView />;
     default:
-      return null; // or a spinner
+      return <Text style={{ color: "red" }}>The White Screen Error</Text>;
   }
 }

@@ -98,8 +98,15 @@ export function GameProvider({ children }) {
 
     // when host starts, backend emits this
     socket.on("gameStarted", ({ round, authorId, text }) => {
+      console.log("Received gameStarted:", { round, authorId, text });
+
       dispatch({ type: "GAME_STARTED", round, authorId, text });
-      router.replace(`/${gameCode}/play?user=${encodeURIComponent(user)}`);
+      try {
+        console.log("Navigating to play screen...");
+        router.replace(`/${gameCode}/play?user=${encodeURIComponent(user)}`);
+      } catch (err) {
+        console.error("Navigation error:", err);
+      }
     });
 
     // when host starts, backend emits this
