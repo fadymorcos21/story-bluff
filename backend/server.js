@@ -13,7 +13,7 @@ const redis = new Redis({
 });
 
 // Helpers
-function makePin(length = 3) {
+function makePin(length = 1) {
   return [...Array(length)]
     .map(() => Math.random().toString(36)[2])
     .join("")
@@ -49,6 +49,13 @@ app.get("/health", (_, res) => res.send("OK"));
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" },
+  pingInterval: 60_000, // default is 25 000
+
+  // how long without a pong before we consider the client disconnected (ms):
+  pingTimeout: 120_000, // default is 5000
+
+  // WAS ABLE TO GOT 127 second in background while in lobby, disconnected cuz i saved this comment
+  // WAS ABLE TO GOT 127 second in background while in lobby
 });
 
 io.on("connection", (socket) => {

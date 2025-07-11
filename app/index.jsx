@@ -1,7 +1,7 @@
 // app/index.jsx
 import { BACKEND_URL, TEST_MODE } from "@env";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   SafeAreaView,
   View,
@@ -18,6 +18,8 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { connectSocket } from "../services/socket";
@@ -39,6 +41,14 @@ export default function Home() {
     : "";
 
   const [username, setUsername] = useState(initialUsername);
+
+  // 1) on mount, load any saved username
+  useEffect(() => {
+    AsyncStorage.getItem("username").then((saved) => {
+      if (saved && !FEATURE_TEST_MODE) setUsername(saved);
+    });
+  }, []);
+
   const [isKeyboardVisible, setKeyboardVisible] = useState("");
 
   // FOR TESTNG - to remove from here
@@ -65,6 +75,7 @@ export default function Home() {
       return Alert.alert("Please enter a username to create a game");
     }
     try {
+      await AsyncStorage.setItem("username", username);
       const res = await fetch(`${BACKEND_URL}/create`, { method: "POST" });
       const { pin } = await res.json();
 
@@ -80,7 +91,7 @@ export default function Home() {
     }
   };
 
-  const handleJoinPress = () => {
+  const handleJoinPress = async () => {
     if (!revealed) {
       setRevealed(FEATURE_TEST_MODE ? false : true);
       Animated.timing(anim, {
@@ -94,6 +105,8 @@ export default function Home() {
       }
 
       const socket = connectSocket(BACKEND_URL);
+
+      await AsyncStorage.setItem("username", username);
 
       socket.emit(
         "joinGame",
