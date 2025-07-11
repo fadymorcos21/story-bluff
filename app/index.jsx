@@ -69,8 +69,8 @@ export default function Home() {
       const { pin } = await res.json();
 
       const socket = connectSocket(BACKEND_URL);
-      // listen for errors
-      socket.on("errorMessage", (msg) => Alert.alert("Error", msg));
+      // listen for errors / alread
+      // socket.on("errorMessage", (msg) => Alert.alert("Error", msg));
 
       socket.emit("joinGame", { pin, username });
       router.replace(`/${pin}?user=${encodeURIComponent(username)}`);
@@ -94,13 +94,22 @@ export default function Home() {
       }
 
       const socket = connectSocket(BACKEND_URL);
-      // listen for errors
-      socket.on("errorMessage", (msg) => Alert.alert("Error", msg));
 
-      socket.emit("joinGame", { pin: code.toUpperCase(), username });
-      // navigate to the same lobby route as create
-      router.replace(
-        `/${code.toUpperCase()}?user=${encodeURIComponent(username)}`
+      socket.emit(
+        "joinGame",
+        { pin: code.toUpperCase(), username },
+        (response) => {
+          if (!response.ok) {
+            // show why we couldn’t join (e.g. “Game not found”)
+            // use Alert in app production
+            // Alert.alert("Error", response.error);
+            return alert(response.error);
+          }
+          // ✅ only navigate when server says OK
+          router.replace(
+            `/${code.toUpperCase()}?user=${encodeURIComponent(username)}`
+          );
+        }
       );
     }
   };

@@ -54,17 +54,29 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("↔️ socket connected:", socket.id);
 
-  socket.on("joinGame", async ({ pin, username }) => {
-    const exists = await redis.exists(`game:${pin}:host`);
-    if (!exists) return socket.emit("errorMessage", "Game not found");
+  socket.on("joinGame", async ({ pin, username }, cb) => {
+    // normalize cb to a no-op if the client didn't pass one
+    const reply = typeof cb === "function" ? cb : () => {};
 
+    // 1) does the game exist?
+    const exists = await redis.exists(`game:${pin}:host`);
+    if (!exists) {
+      return reply({ ok: false, error: "Game not found" });
+    }
+
+    // 2) is it already in progress?
+    const inProgress = await redis.exists(`game:${pin}:storyList`);
+    if (inProgress) {
+      return reply({ ok: false, error: "Game already in progress" });
+    }
+
+    // 3) proceed with the usual join logic
     let hostId = await redis.get(`game:${pin}:host`);
     if (!hostId) {
       await redis.set(`game:${pin}:host`, socket.id);
       hostId = socket.id;
     }
 
-    // include ready:false
     const playerObj = { username, isHost: socket.id === hostId, ready: false };
     await redis.hset(
       `game:${pin}:players`,
@@ -72,16 +84,18 @@ io.on("connection", (socket) => {
       JSON.stringify(playerObj)
     );
     await redis.hset(`game:${pin}:scores`, socket.id, 0);
-
     socket.join(pin);
 
-    // broadcast playersUpdate
+    // 4) broadcast the updated lobby
     const playersRaw = await redis.hgetall(`game:${pin}:players`);
     const playerList = Object.entries(playersRaw).map(([id, str]) => {
       const p = JSON.parse(str);
       return { id, username: p.username, isHost: p.isHost, ready: p.ready };
     });
     io.to(pin).emit("playersUpdate", playerList);
+
+    // 5) finally ack success
+    reply({ ok: true });
   });
 
   socket.on("submitStories", async ({ pin, stories }) => {
@@ -150,6 +164,8 @@ io.on("connection", (socket) => {
         `Need at least 3 players to start (currently ${playerCount}).`
       );
     }
+
+    await redis.set(`game:${pin}:inProgress`, "1");
 
     // Flatten all submitted stories into [{ authorId, text }, ...]
     const storiesRaw = await redis.hgetall(`game:${pin}:stories`);
@@ -248,6 +264,9 @@ io.on("connection", (socket) => {
     // only the host may reset
     const hostId = await redis.get(`game:${pin}:host`);
     if (socket.id !== hostId) return;
+
+    // Game over
+    multi.del(`game:${pin}:inProgress`);
 
     // 1) gather any leftover lock keys for all rounds
     const lockKeys = await redis.keys(`game:${pin}:round:*:scored`);
