@@ -119,6 +119,7 @@ export default function VoteView() {
               extraData={votes}
               style={styles.list}
             />
+            {console.log("vote options", voteOptions)}
 
             <Text style={styles.youAre}>
               {selected
@@ -167,6 +168,7 @@ export default function VoteView() {
               );
             }}
           />
+          {console.log("PLayer List", players)}
         </View>
       )}
 

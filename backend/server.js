@@ -358,6 +358,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", async () => {
     const keys = await redis.keys("game:*:players");
+    console.log(keys);
     console.log("socket left:", socket.id);
     for (const key of keys) {
       const pin = key.split(":")[1];
@@ -386,9 +387,11 @@ io.on("connection", (socket) => {
       }
 
       const finalRaw = await redis.hgetall(`game:${pin}:players`);
-      const finalList = Object.entries(finalRaw).map(([id, str]) =>
-        JSON.parse(str)
-      );
+      const finalList = Object.entries(finalRaw).map(([id, str]) => {
+        const p = JSON.parse(str);
+        return { id, username: p.username, isHost: p.isHost, ready: p.ready };
+      });
+
       io.to(pin).emit("playersUpdate", finalList);
       break;
     }
