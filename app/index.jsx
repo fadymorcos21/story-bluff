@@ -255,7 +255,7 @@ export default function Home() {
                 <Ionicons name="settings-outline" size={24} color="#FFF" />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => Alert.alert("My Story Book")}
+                onPress={() => router.push("/my-story-book")}
                 className="p-3 bg-white/20 rounded-full"
               >
                 <Ionicons name="book-outline" size={24} color="#FFF" />
