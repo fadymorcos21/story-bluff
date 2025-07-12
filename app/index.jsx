@@ -59,7 +59,7 @@ export default function Home() {
   {
     FEATURE_TEST_MODE &&
       Animated.timing(anim, {
-        toValue: 1,
+        toValue: 1.1, // change back to 1
         duration: 300,
         useNativeDriver: false,
       }).start();

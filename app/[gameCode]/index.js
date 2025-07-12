@@ -1,4 +1,5 @@
-import { FEATURE_TEST_MODE } from "@env";
+// app/[gameCode]/index.js
+import { TEST_MODE } from "@env";
 import { useEffect, useState, useRef } from "react";
 import {
   SafeAreaView,
@@ -21,6 +22,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useGame } from "../../context/GameContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+const devMode = TEST_MODE?.toLowerCase() === "true";
 const MAX_STORIES = 5;
 const MIN_STORIES = 3;
 const BOOK_KEY = "@MyStoryBook:stories";
@@ -35,7 +37,6 @@ export default function GameLobby() {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [allStories, setAllStories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const devMode = FEATURE_TEST_MODE === "true";
 
   const me = players.find((p) => p.username === user) || {};
   const amHost = me.isHost;
