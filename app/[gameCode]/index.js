@@ -54,15 +54,18 @@ export default function GameLobby() {
     setDraftText(stories[idx]);
     setEditingIndex(idx);
   };
+
   const saveEditor = () => {
     const next = [...stories];
     next[editingIndex] = draftText;
     setStories(next);
     setEditingIndex(null);
   };
+
   const addStory = () => {
     if (stories.length < MAX_STORIES) setStories([...stories, ""]);
   };
+
   const removeStory = () => {
     if (stories.length > MIN_STORIES)
       setStories((prev) => prev.slice(0, prev.length - 1));
@@ -296,13 +299,16 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   modalBackdrop: {
+    // marginBottom: 20,
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
     alignItems: "center",
+    paddingBottom: 100,
     padding: 20,
   },
   modalContent: {
+    // marginBottom: 60,
     width: "100%",
     maxWidth: 400,
     backgroundColor: "#fff",
