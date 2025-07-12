@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   View,
@@ -9,14 +9,31 @@ import {
   TextInput,
   StyleSheet,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+
+const STORAGE_KEY = "@MyStoryBook:stories";
 
 export default function MyStoryBook() {
+  const router = useRouter();
   const [stories, setStories] = useState([]);
   const [editing, setEditing] = useState(null);
   const [draftName, setDraftName] = useState("");
   const [draftText, setDraftText] = useState("");
+
+  // load from storage
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_KEY).then((json) => {
+      if (json) setStories(JSON.parse(json));
+    });
+  }, []);
+
+  // save to storage
+  useEffect(() => {
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(stories));
+  }, [stories]);
 
   const addStory = () => {
     const newStory = { id: Date.now().toString(), name: "", text: "" };
@@ -78,7 +95,14 @@ export default function MyStoryBook() {
 
   return (
     <LinearGradient colors={["#1a002f", "#2f004f"]} style={styles.container}>
-      <Text style={styles.header}>My Story Book</Text>
+      {/* Header with back button */}
+      <View style={styles.headerRow}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="arrow-back-outline" size={24} color="#FFD700" />
+        </Pressable>
+        <Text style={styles.header}>My Story Book</Text>
+      </View>
+
       <FlatList
         data={stories}
         keyExtractor={(item) => item.id}
@@ -148,15 +172,24 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  backBtn: {
+    padding: 8,
+    marginRight: 12,
+  },
   header: {
     fontSize: 28,
     color: "#FFD700",
     fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
+    textAlign: "left",
     textShadowColor: "#FF8C00",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+    flex: 1,
   },
   emptyContainer: {
     flex: 1,
@@ -225,7 +258,7 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    marginBottom: 115,
+    marginBottom: 122,
     backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
