@@ -1,6 +1,5 @@
-// app/[gameCode]/index.js
 import { FEATURE_TEST_MODE } from "@env";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   SafeAreaView,
   View,
@@ -11,6 +10,10 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  Keyboard,
+  Animated,
+  Dimensions,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -23,44 +26,63 @@ const MIN_STORIES = 3;
 const BOOK_KEY = "@MyStoryBook:stories";
 
 export default function GameLobby() {
+  const screenHeight = Dimensions.get("window").height;
+  const slideAnim = useRef(new Animated.Value(screenHeight)).current;
   const { gameCode, user } = useLocalSearchParams();
   const router = useRouter();
   const { state, socket } = useGame();
   const { players } = state;
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [allStories, setAllStories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const devMode = FEATURE_TEST_MODE === "true";
 
-  // socket.emit("joinGame", { pin: gameCode, username: user });
-
-  // figure out current user & host / ready states
   const me = players.find((p) => p.username === user) || {};
   const amHost = me.isHost;
   const iAmReady = me.ready;
-  const allReady = players.length >= 3 && players.every((p) => p.ready);
+  const allReady =
+    players.length >= MIN_STORIES && players.every((p) => p.ready);
 
-  // GAMEPLAY-MODE-START   - uncomment for gameplay
-  // const [stories, setStories] = useState(Array(MIN_STORIES).fill(""));
   const [stories, setStories] = useState(() => {
-    if (devMode) {
-      // always prefill with your username repeated 4×
-      return Array(MIN_STORIES).fill(`${user} `.repeat(4));
-    }
-    // real mode: start with the minimal empty slots
+    if (devMode) return Array(MIN_STORIES).fill(`${user} `.repeat(4));
     return Array(MIN_STORIES).fill("");
   });
-  // GAMEPLAY-MODE-END
-
-  // TEST-START   - uncomment for testing
-  // const [stories, setStories] = useState([]);
-
-  // useEffect(() => {
-  //   if (me?.username && stories.length === 0) {
-  //     setStories(Array(MIN_STORIES).fill(`${me.username} `.repeat(4)));
-  //   }
-  // }, [me, stories.length]);
-  // TEST-END
-
   const [editingIndex, setEditingIndex] = useState(null);
   const [draftText, setDraftText] = useState("");
+
+  useEffect(() => {
+    if (pickerVisible) {
+      AsyncStorage.getItem(BOOK_KEY).then((json) => {
+        setAllStories(json ? JSON.parse(json) : []);
+      });
+    }
+  }, [pickerVisible]);
+
+  const filtered = allStories.filter((s) =>
+    s.text.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  function openPicker() {
+    // 1) close the editor modal (if open)
+    setEditingIndex(null);
+    // 2) reset search
+    Keyboard.dismiss();
+    setSearchTerm("");
+    // 3) show the overlay
+    setPickerVisible(true);
+    // 4) slide it up
+    slideAnim.setValue(screenHeight);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }
+
+  function pickStory(text) {
+    setDraftText(text);
+    setPickerVisible(false);
+  }
 
   const openEditor = (idx) => {
     setDraftText(stories[idx]);
@@ -85,11 +107,8 @@ export default function GameLobby() {
 
   const submitStories = async () => {
     if (!socket) return Alert.alert("Error", "Not connected");
-    // always tell the server
     socket.emit("submitStories", { pin: gameCode, stories });
-
     if (!devMode) {
-      // only cache to My Story Book in real mode
       try {
         const raw = await AsyncStorage.getItem(BOOK_KEY);
         const existing = raw ? JSON.parse(raw) : [];
@@ -127,6 +146,16 @@ export default function GameLobby() {
     </View>
   );
 
+  function closePicker() {
+    Animated.timing(slideAnim, {
+      toValue: screenHeight, // slide down off‐screen
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setPickerVisible(false); // finally hide the overlay
+    });
+  }
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <LinearGradient
@@ -135,7 +164,6 @@ export default function GameLobby() {
       />
 
       <View style={styles.container}>
-        {/* Close button */}
         <TouchableOpacity
           style={styles.closeButton}
           onPress={() => router.replace("/")}
@@ -143,14 +171,12 @@ export default function GameLobby() {
           <MaterialCommunityIcons name="close" size={24} color="#FFF" />
         </TouchableOpacity>
 
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.pinLabel}>Game PIN</Text>
           <Text style={styles.codeText}>{gameCode}</Text>
           <Text style={styles.waitingText}>Waiting for players…</Text>
         </View>
 
-        {/* Player list with ready state */}
         <FlatList
           data={players}
           keyExtractor={(p) => p.id}
@@ -158,7 +184,6 @@ export default function GameLobby() {
           style={{ marginBottom: 24 }}
         />
 
-        {/* If I haven't submitted, show story inputs; otherwise show waiting / start */}
         {!iAmReady ? (
           <>
             <Text style={styles.sectionTitle}>
@@ -236,7 +261,6 @@ export default function GameLobby() {
         )}
       </View>
 
-      {/* Story editor modal */}
       <Modal visible={editingIndex !== null} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContent}>
@@ -251,22 +275,15 @@ export default function GameLobby() {
             />
 
             <View style={styles.modalButtons}>
-              {/* 1) Cancel on the far left */}
               <TouchableOpacity
                 onPress={() => setEditingIndex(null)}
                 style={styles.modalBtn}
               >
                 <Text style={styles.modalCancel}>Cancel</Text>
               </TouchableOpacity>
-
-              {/* 2) Spacer stretches to push the other two to the right */}
               <View style={{ flex: 1 }} />
-
-              {/* 3) NEW: Story Book picker button */}
               <TouchableOpacity
-                onPress={() => {
-                  /* TODO: open story-book picker */
-                }}
+                onPress={openPicker}
                 style={styles.modalStoryBookBtn}
               >
                 <MaterialCommunityIcons
@@ -275,8 +292,6 @@ export default function GameLobby() {
                   color="#2563EB"
                 />
               </TouchableOpacity>
-
-              {/* 4) Save on the far right */}
               <TouchableOpacity
                 onPress={saveEditor}
                 style={styles.modalSaveButton}
@@ -287,6 +302,59 @@ export default function GameLobby() {
           </View>
         </View>
       </Modal>
+
+      {pickerVisible && (
+        <View style={styles.overlayContainer}>
+          <TouchableWithoutFeedback onPress={closePicker}>
+            {/* backdrop (catches taps to close) */}
+            <View style={styles.overlayBackdrop} />
+          </TouchableWithoutFeedback>
+
+          {/* sliding sheet */}
+          <Animated.View
+            style={[
+              styles.overlayBox,
+              {
+                transform: [{ translateY: slideAnim }],
+                zIndex: 10000,
+                elevation: 10000,
+              },
+            ]}
+          >
+            <Text style={styles.overlayTitle}>📖 My Story Book</Text>
+
+            <TextInput
+              placeholder="Search stories…"
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+              style={styles.sheetSearch}
+            />
+
+            <FlatList
+              data={filtered}
+              keyExtractor={(item) => item.id}
+              style={{ marginTop: 12 }}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.sheetItem}
+                  onPress={() => pickStory(item.text)}
+                >
+                  <Text numberOfLines={2} style={styles.sheetItemText}>
+                    {item.text}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+
+            <TouchableOpacity
+              onPress={() => setPickerVisible(false)}
+              style={{ marginTop: 16, alignSelf: "flex-end" }}
+            >
+              <Text style={{ color: "#2563EB", fontWeight: "600" }}>Close</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -352,16 +420,13 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   modalBackdrop: {
-    // marginBottom: 20,
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
     alignItems: "center",
-    paddingBottom: 100,
     padding: 20,
   },
   modalContent: {
-    // marginBottom: 60,
     width: "100%",
     maxWidth: 400,
     backgroundColor: "#fff",
@@ -382,13 +447,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 12,
   },
-  modalBtn: {
-    padding: 8,
-  },
-  modalStoryBookBtn: {
-    padding: 8,
-    marginHorizontal: 12, // space between story-book & save
-  },
+  modalBtn: { padding: 8 },
+  modalStoryBookBtn: { padding: 8, marginHorizontal: 12 },
   modalCancel: { fontSize: 16, color: "#555" },
   modalSaveButton: {
     backgroundColor: "#3B82F6",
@@ -397,4 +457,79 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   modalSaveText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  modalWrapper: { flex: 1, justifyContent: "flex-end" },
+  sheetOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  sheetContainer: {
+    width: "100%",
+    height: "80%",
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#ccc",
+    borderRadius: 3,
+    alignSelf: "center",
+    marginBottom: 12,
+  },
+  sheetSearch: {
+    height: 40,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+  },
+  sheetItem: {
+    paddingVertical: 12,
+    borderBottomColor: "#eee",
+    borderBottomWidth: 1,
+  },
+  sheetItemText: { fontSize: 16, color: "#333" },
+  overlayContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    zIndex: 10000,
+    elevation: 10000,
+  },
+
+  overlayBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.6)",
+  },
+  overlayBox: {
+    width: "100%",
+    height: "80%", // cover 80% of screen height
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 16,
+  },
+
+  overlayTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+    textAlign: "center",
+  },
 });
