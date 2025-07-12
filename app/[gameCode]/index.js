@@ -1,5 +1,5 @@
 // app/[gameCode]/index.js
-import { BACKEND_URL, FEATURE_TEST_MODE } from "@env";
+import { FEATURE_TEST_MODE } from "@env";
 import { useEffect, useState } from "react";
 import {
   SafeAreaView,
@@ -16,15 +16,19 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useGame } from "../../context/GameContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const MAX_STORIES = 5;
 const MIN_STORIES = 3;
+const BOOK_KEY = "@MyStoryBook:stories";
 
 export default function GameLobby() {
   const { gameCode, user } = useLocalSearchParams();
   const router = useRouter();
   const { state, socket } = useGame();
   const { players } = state;
+  const devMode = FEATURE_TEST_MODE === "true";
+
   // socket.emit("joinGame", { pin: gameCode, username: user });
 
   // figure out current user & host / ready states
@@ -35,16 +39,24 @@ export default function GameLobby() {
 
   // GAMEPLAY-MODE-START   - uncomment for gameplay
   // const [stories, setStories] = useState(Array(MIN_STORIES).fill(""));
+  const [stories, setStories] = useState(() => {
+    if (devMode) {
+      // always prefill with your username repeated 4×
+      return Array(MIN_STORIES).fill(`${user} `.repeat(4));
+    }
+    // real mode: start with the minimal empty slots
+    return Array(MIN_STORIES).fill("");
+  });
   // GAMEPLAY-MODE-END
 
   // TEST-START   - uncomment for testing
-  const [stories, setStories] = useState([]);
+  // const [stories, setStories] = useState([]);
 
-  useEffect(() => {
-    if (me?.username && stories.length === 0) {
-      setStories(Array(MIN_STORIES).fill(`${me.username} `.repeat(4)));
-    }
-  }, [me, stories.length]);
+  // useEffect(() => {
+  //   if (me?.username && stories.length === 0) {
+  //     setStories(Array(MIN_STORIES).fill(`${me.username} `.repeat(4)));
+  //   }
+  // }, [me, stories.length]);
   // TEST-END
 
   const [editingIndex, setEditingIndex] = useState(null);
@@ -71,9 +83,29 @@ export default function GameLobby() {
       setStories((prev) => prev.slice(0, prev.length - 1));
   };
 
-  const submitStories = () => {
+  const submitStories = async () => {
     if (!socket) return Alert.alert("Error", "Not connected");
+    // always tell the server
     socket.emit("submitStories", { pin: gameCode, stories });
+
+    if (!devMode) {
+      // only cache to My Story Book in real mode
+      try {
+        const raw = await AsyncStorage.getItem(BOOK_KEY);
+        const existing = raw ? JSON.parse(raw) : [];
+        const newEntries = stories.map((t, i) => ({
+          id: `${gameCode}-${user}-${Date.now()}-${i}`,
+          name: "",
+          text: t,
+        }));
+        await AsyncStorage.setItem(
+          BOOK_KEY,
+          JSON.stringify([...newEntries, ...existing])
+        );
+      } catch (e) {
+        console.error("Failed to cache stories:", e);
+      }
+    }
   };
 
   const startGame = () => {
@@ -217,13 +249,34 @@ export default function GameLobby() {
               style={styles.modalInput}
               textAlignVertical="top"
             />
+
             <View style={styles.modalButtons}>
+              {/* 1) Cancel on the far left */}
               <TouchableOpacity
                 onPress={() => setEditingIndex(null)}
-                style={{ marginRight: 12 }}
+                style={styles.modalBtn}
               >
                 <Text style={styles.modalCancel}>Cancel</Text>
               </TouchableOpacity>
+
+              {/* 2) Spacer stretches to push the other two to the right */}
+              <View style={{ flex: 1 }} />
+
+              {/* 3) NEW: Story Book picker button */}
+              <TouchableOpacity
+                onPress={() => {
+                  /* TODO: open story-book picker */
+                }}
+                style={styles.modalStoryBookBtn}
+              >
+                <MaterialCommunityIcons
+                  name="book-open-page-variant"
+                  size={24}
+                  color="#2563EB"
+                />
+              </TouchableOpacity>
+
+              {/* 4) Save on the far right */}
               <TouchableOpacity
                 onPress={saveEditor}
                 style={styles.modalSaveButton}
@@ -326,8 +379,15 @@ const styles = StyleSheet.create({
   },
   modalButtons: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 16,
+    alignItems: "center",
+    paddingTop: 12,
+  },
+  modalBtn: {
+    padding: 8,
+  },
+  modalStoryBookBtn: {
+    padding: 8,
+    marginHorizontal: 12, // space between story-book & save
   },
   modalCancel: { fontSize: 16, color: "#555" },
   modalSaveButton: {
