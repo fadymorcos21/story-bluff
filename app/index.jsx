@@ -24,6 +24,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { connectSocket } from "../services/socket";
 import "./../global.css";
+import { Ionicons } from "@expo/vector-icons";
 
 // Testing Purposes
 const FEATURE_TEST_MODE = TEST_MODE?.toLowerCase() === "true";
@@ -146,8 +147,8 @@ export default function Home() {
       />
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View className="flex-1 py-7 -mt-3">
-          <View className="flex-1 pt-20 items-center px-10">
+        <View className="flex-1 py-7-mt-3">
+          <View className="flex-[5] justify-center bg-rsed-200  items-center px-10">
             <Image
               source={require("../assets/story_bluff_logo.png")}
               style={{ width: 288, height: 200, marginBottom: 32 }}
@@ -160,7 +161,9 @@ export default function Home() {
             />
           </View>
 
-          <View className="items-center bottom-28 justify-center px-10">
+          {/* Wrapa from here */}
+
+          <View className="flex-[0.8] items-center bottom-28s justify-center px-10">
             <TouchableOpacity
               className="w-full max-w-md bg-blue-500 py-4 rounded-full mb-4 shadow-lg"
               onLayout={(e) => setCreateBtnWidth(e.nativeEvent.layout.width)}
@@ -175,7 +178,7 @@ export default function Home() {
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "position" : "height"}
             keyboardVerticalOffset={Platform.select({ ios: 50, android: 0 })}
-            className="left-0 px-10 bottom-28 right-0 px-10"
+            className="flex-[0.8] justify-center left-0 px-10 bottom-28s right-0 px-10"
             enabled={isKeyboardVisible === "code"}
           >
             <View className="w-full max-w-md h-12 mb-6 relative">
@@ -217,7 +220,7 @@ export default function Home() {
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "position" : "height"}
             keyboardVerticalOffset={Platform.select({ ios: 50, android: 0 })}
-            className="bottom-28 left-0 px-10 right-0 pb-6"
+            className="flex-[0.8] jur bottom-28s left-0 px-10 right-0 pb-6"
             enabled={isKeyboardVisible === "username"}
           >
             <TextInput
@@ -239,8 +242,36 @@ export default function Home() {
               onBlur={() => setKeyboardVisible("")}
             />
           </KeyboardAvoidingView>
+          {/* Wrapa to here */}
 
           {/* Add the buttons here */}
+
+          <View className="flex-[0.9] justify-end pb-6 left-0 right-0 px-10">
+            <View className="flex-row flex-row justify-around items-center">
+              <TouchableOpacity
+                onPress={() => Alert.alert("Settings")}
+                className="p-3 bg-white/20 rounded-full"
+              >
+                <Ionicons name="settings-outline" size={24} color="#FFF" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => Alert.alert("My Story Book")}
+                className="p-3 bg-white/20 rounded-full"
+              >
+                <Ionicons name="book-outline" size={24} color="#FFF" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => Alert.alert("Game Mode")}
+                className="p-3 bg-white/20 rounded-full"
+              >
+                <Ionicons
+                  name="game-controller-outline"
+                  size={24}
+                  color="#FFF"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </TouchableWithoutFeedback>
     </SafeAreaView>
