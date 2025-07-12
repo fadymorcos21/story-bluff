@@ -175,7 +175,7 @@ export default function Home() {
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "position" : "height"}
             keyboardVerticalOffset={Platform.select({ ios: 50, android: 0 })}
-            className="left-0 px-10 bottom-28 right-0 px-10 pb-6"
+            className="left-0 px-10 bottom-28 right-0 px-10"
             enabled={isKeyboardVisible === "code"}
           >
             <View className="w-full max-w-md h-12 mb-6 relative">
@@ -217,7 +217,7 @@ export default function Home() {
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "position" : "height"}
             keyboardVerticalOffset={Platform.select({ ios: 50, android: 0 })}
-            className="absolute bottom-10 left-0 px-10 right-0 px-4 pb-6"
+            className="bottom-28 left-0 px-10 right-0 pb-6"
             enabled={isKeyboardVisible === "username"}
           >
             <TextInput
@@ -232,13 +232,15 @@ export default function Home() {
               returnKeyType="done"
               className={
                 isKeyboardVisible === "username"
-                  ? "w-full max-w-md h-12 bg-white/60 text-black text-center text-xl rounded-lg"
-                  : "w-full max-w-md h-12 bg-white/20 text-white text-center text-xl rounded-lg"
+                  ? "w-full rounded-2xl max-w-md h-12 bg-white/60 text-black text-center text-xl rounded-lg"
+                  : "w-full rounded-full max-w-md h-12 bg-white/20 text-white text-center text-xl rounded-lg"
               }
               onFocus={() => setKeyboardVisible("username")}
               onBlur={() => setKeyboardVisible("")}
             />
           </KeyboardAvoidingView>
+
+          {/* Add the buttons here */}
         </View>
       </TouchableWithoutFeedback>
     </SafeAreaView>
