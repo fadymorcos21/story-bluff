@@ -63,25 +63,33 @@ export default function GameLobby() {
   );
 
   function openPicker() {
-    // 1) close the editor modal (if open)
-    setEditingIndex(null);
-    // 2) reset search
+    // keep which slot we're editing, just dismiss its native Modal
+    // setEditingIndex(null);
     Keyboard.dismiss();
     setSearchTerm("");
-    // 3) show the overlay
     setPickerVisible(true);
-    // 4) slide it up
-    slideAnim.setValue(screenHeight);
+    slideAnim.setValue(screenHeight * 0.8); // start off‐screen
     Animated.timing(slideAnim, {
-      toValue: 0,
+      toValue: 0, // slide to bottom‐aligned 0
       duration: 300,
       useNativeDriver: true,
     }).start();
   }
 
   function pickStory(text) {
-    setDraftText(text);
-    setPickerVisible(false);
+    Alert.alert("Use this saved story?", "Insert into your current slot?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Yes",
+        onPress: () => {
+          const next = [...stories];
+          next[editingIndex] = text;
+          setStories(next);
+          closePicker();
+          setEditingIndex(null);
+        },
+      },
+    ]);
   }
 
   const openEditor = (idx) => {
@@ -263,6 +271,57 @@ export default function GameLobby() {
 
       <Modal visible={editingIndex !== null} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
+          {/* 1) Picker overlay lives here, as a sibling to modalContent */}
+          {pickerVisible && (
+            <View style={styles.overlayContainer}>
+              <TouchableWithoutFeedback onPress={closePicker}>
+                <View style={styles.overlayBackdrop} />
+              </TouchableWithoutFeedback>
+
+              <Animated.View
+                style={[
+                  styles.overlayBox,
+                  { transform: [{ translateY: slideAnim }] },
+                ]}
+              >
+                <Text style={styles.overlayTitle}>📖 My Story Book</Text>
+
+                <TextInput
+                  placeholder="Search stories…"
+                  value={searchTerm}
+                  onChangeText={setSearchTerm}
+                  style={styles.sheetSearch}
+                />
+
+                <FlatList
+                  data={filtered}
+                  keyExtractor={(item) => item.id}
+                  style={{ marginTop: 12 }}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.sheetItem}
+                      onPress={() => pickStory(item.text)}
+                    >
+                      <Text numberOfLines={2} style={styles.sheetItemText}>
+                        {item.text}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+
+                <TouchableOpacity
+                  onPress={closePicker}
+                  style={{ marginTop: 16, alignSelf: "flex-end" }}
+                >
+                  <Text style={{ color: "#2563EB", fontWeight: "600" }}>
+                    Close
+                  </Text>
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
+          )}
+
+          {/* 2) Your regular editor UI */}
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Story {editingIndex + 1}</Text>
             <TextInput
@@ -282,10 +341,7 @@ export default function GameLobby() {
                 <Text style={styles.modalCancel}>Cancel</Text>
               </TouchableOpacity>
               <View style={{ flex: 1 }} />
-              <TouchableOpacity
-                onPress={openPicker}
-                style={styles.modalStoryBookBtn}
-              >
+              <TouchableOpacity onPress={openPicker} style={styles.modalBtn}>
                 <MaterialCommunityIcons
                   name="book-open-page-variant"
                   size={24}
@@ -302,59 +358,6 @@ export default function GameLobby() {
           </View>
         </View>
       </Modal>
-
-      {pickerVisible && (
-        <View style={styles.overlayContainer}>
-          <TouchableWithoutFeedback onPress={closePicker}>
-            {/* backdrop (catches taps to close) */}
-            <View style={styles.overlayBackdrop} />
-          </TouchableWithoutFeedback>
-
-          {/* sliding sheet */}
-          <Animated.View
-            style={[
-              styles.overlayBox,
-              {
-                transform: [{ translateY: slideAnim }],
-                zIndex: 10000,
-                elevation: 10000,
-              },
-            ]}
-          >
-            <Text style={styles.overlayTitle}>📖 My Story Book</Text>
-
-            <TextInput
-              placeholder="Search stories…"
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-              style={styles.sheetSearch}
-            />
-
-            <FlatList
-              data={filtered}
-              keyExtractor={(item) => item.id}
-              style={{ marginTop: 12 }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.sheetItem}
-                  onPress={() => pickStory(item.text)}
-                >
-                  <Text numberOfLines={2} style={styles.sheetItemText}>
-                    {item.text}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-
-            <TouchableOpacity
-              onPress={() => setPickerVisible(false)}
-              style={{ marginTop: 16, alignSelf: "flex-end" }}
-            >
-              <Text style={{ color: "#2563EB", fontWeight: "600" }}>Close</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
-      )}
     </SafeAreaView>
   );
 }
@@ -425,6 +428,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    zIndex: -10,
   },
   modalContent: {
     width: "100%",
