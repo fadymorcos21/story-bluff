@@ -1,17 +1,26 @@
 // context/GameContext.js
 
-import React, { createContext, useReducer, useContext, useEffect } from "react";
-import { connectSocket } from "../services/socket";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import React, {
+  createContext,
+  useReducer,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { connectSocket, disconnectSocket } from "../services/socket";
+import {
+  useLocalSearchParams,
+  useGlobalSearchParams,
+  useRouter,
+} from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const initialState = {
-  // list of players in the lobby
-  players: [], // [{ id, username, isHost }]
-  // current phase: "LOBBY" → "ROUND" → "VOTE" → "REVEAL" → "FINAL"
-  phase: "LOBBY",
+  players: [], // [{ id, username, isHost, ready }]
+  phase: "LOBBY", // "LOBBY" → "ROUND" → "VOTE" → "REVEAL" → "FINAL"
   round: 0,
-  story: null, // story text for the current round
-  authorId: null, // who wrote this round’s story
+  story: null,
+  authorId: null,
   votes: {}, // { voterId: choiceId }
   scores: {}, // { playerId: score }
 };
@@ -59,7 +68,6 @@ function reducer(state, action) {
       return { ...state, phase: "FINAL" };
 
     case "RESET":
-      // wipe out everything except the players list
       return {
         ...state,
         phase: "LOBBY",
@@ -78,74 +86,68 @@ function reducer(state, action) {
 const GameContext = createContext();
 
 export function GameProvider({ children }) {
-  const { gameCode, user } = useLocalSearchParams();
+  const { gameCode } = useLocalSearchParams();
   const router = useRouter();
   const [state, dispatch] = useReducer(reducer, initialState);
+  const { user } = useGlobalSearchParams();
 
-  // single shared socket
-  const socket = connectSocket();
+  // Hold the socket instance in state so components can use it safely
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    socket.connect();
+    let isMounted = true;
 
-    // join lobby
-    socket.emit("joinGame", { pin: gameCode, username: user });
+    (async () => {
+      const s = await connectSocket();
+      if (!isMounted) return;
 
-    // update players list whenever someone joins/leaves
-    socket.on("playersUpdate", (players) =>
-      dispatch({ type: "PLAYERS_UPDATE", players })
-    );
+      setSocket(s);
 
-    // when host starts, backend emits this
-    socket.on("gameStarted", ({ round, authorId, text }) => {
-      console.log("Received gameStarted:", { round, authorId, text });
+      const existingUserId = await AsyncStorage.getItem("userId");
+      console.log(
+        `navigating user ${user} with ${existingUserId} to game ${gameCode}`
+      );
+      s.emit("joinGame", { pin: gameCode, username: user });
 
-      dispatch({ type: "GAME_STARTED", round, authorId, text });
-      try {
-        console.log("Navigating to play screen...");
+      // Join the lobby
+      s.emit("joinGame", { pin: gameCode, username: user });
+
+      // Register event listeners
+      s.on("playersUpdate", (players) =>
+        dispatch({ type: "PLAYERS_UPDATE", players })
+      );
+
+      s.on("gameStarted", ({ round, authorId, text }) => {
+        dispatch({ type: "GAME_STARTED", round, authorId, text });
         router.replace(`/${gameCode}/play?user=${encodeURIComponent(user)}`);
-      } catch (err) {
-        console.error("Navigation error:", err);
-      }
-    });
+      });
 
-    // when host starts, backend emits this
-    socket.on("nextRound", ({ round, authorId, text }) => {
-      dispatch({ type: "NEXT_ROUND", round, authorId, text });
-    });
+      s.on("nextRound", ({ round, authorId, text }) =>
+        dispatch({ type: "NEXT_ROUND", round, authorId, text })
+      );
 
-    socket.on("votesUpdate", (votes) => {
-      dispatch({ type: "VOTES_UPDATE", votes });
-      console.log(votes);
-    });
+      s.on("votesUpdate", (votes) => dispatch({ type: "VOTES_UPDATE", votes }));
 
-    // after everyone votes
-    socket.on("voteResult", ({ votes, scores }) =>
-      dispatch({ type: "VOTE_RESULT", votes, scores })
-    );
+      s.on("voteResult", ({ votes, scores }) =>
+        dispatch({ type: "VOTE_RESULT", votes, scores })
+      );
 
-    // handle errors (e.g. bad PIN)
-    socket.on("errorMessage", (msg) => {
-      alert(msg);
-      router.replace("/");
-    });
+      s.on("errorMessage", (msg) => {
+        alert(msg);
+        router.replace("/");
+      });
 
-    // listen for the server preparing the next round
-    socket.on("roundPrepared", ({ round, authorId, text }) =>
-      dispatch({ type: "ROUND_PREPARED", round, authorId, text })
-    );
+      s.on("roundPrepared", ({ round, authorId, text }) =>
+        dispatch({ type: "ROUND_PREPARED", round, authorId, text })
+      );
 
-    // when all stories exhausted
-    socket.on("gameEnded", () => dispatch({ type: "END_GAME" }));
-
-    // when host resets to lobby
-    // socket.on("gameReset", () => {
-    //   dispatch({ type: "RESET" });
-    //   router.replace(`/${gameCode}?user=${encodeURIComponent(user)}`);
-    // });
+      s.on("gameEnded", () => dispatch({ type: "END_GAME" }));
+    })();
 
     return () => {
-      socket.disconnect();
+      isMounted = false;
+      disconnectSocket();
+      setSocket(null);
     };
   }, [gameCode]);
 

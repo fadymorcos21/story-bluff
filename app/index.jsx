@@ -80,11 +80,15 @@ export default function Home() {
       const res = await fetch(`${BACKEND_URL}/create`, { method: "POST" });
       const { pin } = await res.json();
 
-      const socket = connectSocket(BACKEND_URL);
+      // const socket = await connectSocket(BACKEND_URL);
       // listen for errors / alread
       // socket.on("errorMessage", (msg) => Alert.alert("Error", msg));
-
-      socket.emit("joinGame", { pin, username });
+      console.log(pin);
+      // socket.emit("joinGame", { pin, username });
+      const existingUserId = await AsyncStorage.getItem("userId");
+      console.log(
+        `navigating user ${username} with ${existingUserId} to game ${pin}`
+      );
       router.replace(`/${pin}?user=${encodeURIComponent(username)}`);
     } catch (err) {
       console.error(err);
@@ -105,7 +109,7 @@ export default function Home() {
         return Alert.alert("Enter both username and game pin");
       }
 
-      const socket = connectSocket(BACKEND_URL);
+      const socket = await connectSocket(BACKEND_URL);
 
       await AsyncStorage.setItem("username", username);
 
