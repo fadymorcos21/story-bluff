@@ -73,6 +73,7 @@ io.on("connection", (socket) => {
 
     // 2) is it already in progress?
     const inProgress = await redis.exists(`game:${pin}:storyList`);
+
     if (inProgress) {
       return reply({ ok: false, error: "Game already in progress" });
     }

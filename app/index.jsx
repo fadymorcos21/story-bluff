@@ -113,16 +113,16 @@ export default function Home() {
 
       await AsyncStorage.setItem("username", username);
 
-      socket.emit(
-        "joinGame",
-        { pin: code.toUpperCase(), username },
-        (response) => {
-          if (!response.ok) {
-            // show why we couldn’t join (e.g. “Game not found”)
-            // use Alert in app production
-            // Alert.alert("Error", response.error);
-            return alert(response.error);
-          }
+      // socket.emit(
+      //   "joinGame",
+      //   { pin: code.toUpperCase(), username },
+      //   (response) => {
+      //     if (!response.ok) {
+      //       // show why we couldn’t join (e.g. “Game not found”)
+      //       // use Alert in app production
+      //       // Alert.alert("Error", response.error);
+      //       return alert(response.error);
+      //     }
           // ✅ only navigate when server says OK
           router.replace(
             `/${code.toUpperCase()}?user=${encodeURIComponent(username)}`
