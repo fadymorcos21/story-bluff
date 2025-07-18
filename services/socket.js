@@ -49,11 +49,15 @@ export async function connectSocket(url = BACKEND_URL, opts = {}) {
   if (!socket) {
     socket = io(url, {
       autoConnect: false,
+      auth: { userId },
       transports: ["websocket"],
       ...opts,
     });
+    console.log("NOT SOCKET");
   } else {
     socket.auth = { userId };
+
+    console.log("YES SOCKET");
   }
 
   if (!socket.connected) {

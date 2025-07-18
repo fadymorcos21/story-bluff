@@ -103,14 +103,15 @@ export function GameProvider({ children }) {
 
       setSocket(s);
 
-      const existingUserId = await AsyncStorage.getItem("userId");
-      console.log(
-        `navigating user ${user} with ${existingUserId} to game ${gameCode}`
-      );
-      s.emit("joinGame", { pin: gameCode, username: user });
-
-      // Join the lobby
-      s.emit("joinGame", { pin: gameCode, username: user });
+      // const existingUserId = await AsyncStorage.getItem("userId");
+      // console.log(
+      //   `navigating user ${user} with ${existingUserId} to game ${gameCode}`
+      // );
+      s.emit("joinGame", {
+        pin: gameCode,
+        username: user,
+        // userId: existingUserId,
+      });
 
       // Register event listeners
       s.on("playersUpdate", (players) =>

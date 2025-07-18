@@ -84,7 +84,6 @@ export default function Home() {
       // listen for errors / alread
       // socket.on("errorMessage", (msg) => Alert.alert("Error", msg));
       console.log(pin);
-      // socket.emit("joinGame", { pin, username });
       const existingUserId = await AsyncStorage.getItem("userId");
       console.log(
         `navigating user ${username} with ${existingUserId} to game ${pin}`
