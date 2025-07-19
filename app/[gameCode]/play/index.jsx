@@ -1,10 +1,11 @@
 // app/[gameCode]/play/index.jsx
 import { useGame } from "../../../context/GameContext";
+import { Text } from "react-native"; // <-- make sure this is here
+
 import RevealView from "./(views)/RevealView";
 import RoundView from "./(views)/RoundView";
 import VoteView from "./(views)/VoteView";
 import FinalView from "./(views)/FinalView";
-// … potentially FinalView later
 
 export default function Play() {
   const { state } = useGame();

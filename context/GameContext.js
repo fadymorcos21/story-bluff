@@ -23,6 +23,7 @@ const initialState = {
   authorId: null,
   votes: {}, // { voterId: choiceId }
   scores: {}, // { playerId: score }
+  initialPlayers: [],
 };
 
 function reducer(state, action) {
@@ -38,6 +39,20 @@ function reducer(state, action) {
         story: action.text,
         authorId: action.authorId,
         votes: {},
+        initialPlayers: action.initialPlayers,
+      };
+
+    case "REHYDRATE":
+      return {
+        ...state,
+        players: action.state.players,
+        initialPlayers: action.state.initialPlayers,
+        phase: action.state.phase,
+        round: action.state.round,
+        authorId: action.state.authorId,
+        votes: action.state.votes,
+        scores: action.state.scores,
+        story: action.state.story,
       };
 
     case "NEXT_ROUND":
@@ -93,12 +108,15 @@ export function GameProvider({ children }) {
 
   // Hold the socket instance in state so components can use it safely
   const [socket, setSocket] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
 
     (async () => {
       const s = await connectSocket();
+      if (!isMounted) return;
+      setUserId(s.auth.userId);
       if (!isMounted) return;
 
       setSocket(s);
@@ -118,8 +136,14 @@ export function GameProvider({ children }) {
         dispatch({ type: "PLAYERS_UPDATE", players })
       );
 
-      s.on("gameStarted", ({ round, authorId, text }) => {
-        dispatch({ type: "GAME_STARTED", round, authorId, text });
+      s.on("gameStarted", ({ round, authorId, text, initialPlayers }) => {
+        dispatch({
+          type: "GAME_STARTED",
+          round,
+          authorId,
+          text,
+          initialPlayers,
+        });
         router.replace(`/${gameCode}/play?user=${encodeURIComponent(user)}`);
       });
 
@@ -142,6 +166,15 @@ export function GameProvider({ children }) {
         dispatch({ type: "ROUND_PREPARED", round, authorId, text })
       );
 
+      s.on("syncState", (fullState) => {
+        dispatch({ type: "REHYDRATE", state: fullState });
+
+        // if the game is already in progress, navigate into Play:
+        if (fullState.phase !== "LOBBY" || fullState.round !== 0) {
+          router.replace(`/${gameCode}/play?user=${encodeURIComponent(user)}`);
+        }
+      });
+
       s.on("gameEnded", () => dispatch({ type: "END_GAME" }));
     })();
 
@@ -153,7 +186,7 @@ export function GameProvider({ children }) {
   }, [gameCode]);
 
   return (
-    <GameContext.Provider value={{ state, dispatch, socket }}>
+    <GameContext.Provider value={{ state, dispatch, socket, userId }}>
       {children}
     </GameContext.Provider>
   );

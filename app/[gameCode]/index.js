@@ -28,8 +28,9 @@ const MIN_STORIES = 3;
 const BOOK_KEY = "@MyStoryBook:stories";
 
 export default function GameLobby() {
-  const { state, socket } = useGame();
+  const { state, socket, userId } = useGame();
 
+  console.log("WAAAAAAAAH", userId);
   const screenHeight = Dimensions.get("window").height;
   const slideAnim = useRef(new Animated.Value(screenHeight)).current;
   const { gameCode, user } = useLocalSearchParams();

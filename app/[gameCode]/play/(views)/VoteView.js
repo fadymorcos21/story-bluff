@@ -15,7 +15,7 @@ import { useGame } from "../../../../context/GameContext";
 
 export default function VoteView() {
   const { gameCode, user } = useLocalSearchParams();
-  const { state, dispatch, socket } = useGame();
+  const { state, socket, userId } = useGame();
   const { players, votes, story, scores } = state;
   const [selected, setSelected] = useState(null);
   const [hasVoted, setHasVoted] = useState(false);
@@ -23,14 +23,27 @@ export default function VoteView() {
   const [showScores, setShowScores] = useState(false);
   const toggleScores = () => setShowScores((prev) => !prev);
 
-  const voteOptions = players.filter((p) => p.username !== user);
+  // const voteOptions = players.filter((p) => p.username !== user);
+  // NEW: vote options come from the original snapshot (minus the author)
+  const voteOptions = state.initialPlayers
+    .filter((id) => id !== userId)
+    .map((id) => players.find((p) => p.id === id))
+    .filter(Boolean);
 
   // Who hasn't voted yet?  (only among the valid options)
-  const waitingIds = voteOptions
+  // const waitingIds = voteOptions
+  //   .map((p) => p.id)
+  //   .filter((id) => votes[id] == null);
+
+  // waiting on anyone still in the live players list
+  const waitingLive = players
     .map((p) => p.id)
-    .filter((id) => votes[id] == null);
+    .filter((id) => id !== state.authorId && votes[id] == null);
   const waitingName =
-    voteOptions.find((p) => p.id === waitingIds[0])?.username || "";
+    players.find((p) => p.id === waitingLive[0])?.username || "";
+
+  // const waitingName =
+  //   voteOptions.find((p) => p.id === waitingIds[0])?.username || "";
 
   // When you press an option
   const handleSelect = (id) => {
