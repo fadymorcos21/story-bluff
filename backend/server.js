@@ -111,8 +111,9 @@ io.on("connection", (socket) => {
       const playerObj = JSON.parse(existingData);
       if (playerObj.username !== username) {
         playerObj.username = username;
-        await redis.hset(playerKey, userId, JSON.stringify(playerObj));
       }
+      playerObj.isConnected = true;
+      await redis.hset(playerKey, userId, JSON.stringify(playerObj));
     }
     // 5. Broadcast updated lobby state to all players
     const playersRaw = await redis.hgetall(playerKey);
@@ -540,24 +541,59 @@ io.on("connection", (socket) => {
   socket.on("disconnect", async () => {
     // find every game where this user was in the players hash
     const keys = await redis.keys("game:*:players");
-    console.log("socket left:", socket.data.userId);
+    console.log(
+      "User disconnected: ",
+      socket.data.userId,
+      " with socket id: ",
+      socket.id
+    );
     for (const key of keys) {
       const pin = key.split(":")[1];
       // skip games where they weren’t a player
       if (!(await redis.hexists(key, socket.data.userId))) continue;
 
-      // 1) mark them offline instead of deleting
-      const raw = JSON.parse(await redis.hget(key, socket.data.userId));
-      raw.isConnected = false;
-      await redis.hset(key, socket.data.userId, JSON.stringify(raw));
+      const hasStarted = await redis.exists(`game:${pin}:storyList`);
+      if (!hasStarted) {
+        await Promise.all([
+          redis.hdel(`game:${pin}:players`, socket.data.userId),
+          redis.hdel(`game:${pin}:stories`, socket.data.userId),
+          redis.hdel(`game:${pin}:scores`, socket.data.userId),
+          redis.srem(`game:${pin}:submissions`, socket.data.userId),
+        ]);
+
+        // 1b) if they were host, pick a new one
+        const oldHost = await redis.get(`game:${pin}:host`);
+        let newHost = oldHost;
+        if (socket.data.userId === oldHost) {
+          const remaining = await redis.hkeys(`game:${pin}:players`);
+          newHost = remaining[0] || "";
+          await redis.set(`game:${pin}:host`, newHost);
+        }
+
+        // 1c) update isHost flags for everyone left
+        const playersRaw = await redis.hgetall(`game:${pin}:players`);
+        for (const [id, str] of Object.entries(playersRaw)) {
+          const p = JSON.parse(str);
+          p.isHost = id === newHost;
+          await redis.hset(`game:${pin}:players`, id, JSON.stringify(p));
+        }
+      } else {
+        // 1) mark them offline instead of deleting
+        console.log(
+          `Marking user ${socket.data.userId} offline in game ${pin}`
+        );
+        const raw = JSON.parse(await redis.hget(key, socket.data.userId));
+        raw.isConnected = false;
+        await redis.hset(key, socket.data.userId, JSON.stringify(raw));
+      }
 
       // 2) (Optional) if they were host, you can reassign here—but
       //    since they’ll reconnect, you may choose to keep them as host.
       //    If you do want to pick a new host on disconnect, do it here.
 
-      // 3) re-broadcast updated lobby
-      const playersRaw = await redis.hgetall(key);
-      const finalList = Object.entries(playersRaw).map(([id, str]) => {
+      // 1d) broadcast the new lobby
+      const updatedPlayersRaw = await redis.hgetall(`game:${pin}:players`);
+      const updatedList = Object.entries(updatedPlayersRaw).map(([id, str]) => {
         const p = JSON.parse(str);
         return {
           id,
@@ -567,7 +603,7 @@ io.on("connection", (socket) => {
           isConnected: p.isConnected,
         };
       });
-      io.to(pin).emit("playersUpdate", finalList);
+      io.to(pin).emit("playersUpdate", updatedList);
 
       break; // found the game, no need to keep looping
     }
