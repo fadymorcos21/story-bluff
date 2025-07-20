@@ -114,7 +114,7 @@ export function GameProvider({ children }) {
     let isMounted = true;
 
     (async () => {
-      const s = await connectSocket();
+      const s = await connectSocket(gameCode, user);
       if (!isMounted) return;
       setUserId(s.auth.userId);
       if (!isMounted) return;
@@ -125,12 +125,23 @@ export function GameProvider({ children }) {
       // console.log(
       //   `navigating user ${user} with ${existingUserId} to game ${gameCode}`
       // );
+
       s.emit("joinGame", {
         pin: gameCode,
         username: user,
         // userId: existingUserId,
       });
 
+      // s.on("connect", () => {
+      //   console.log("socket reconnected → rejoining game");
+      //   s.emit("joinGame", { pin: gameCode, username: user, userId: userId });
+      // });
+
+      s.on("reconnect", (attempt) => {
+        console.log("🔄 socket reconnected (attempt", attempt, ")");
+        // re-join the game and re-hydrate
+        s.emit("joinGame", { pin: gameCode, username: user });
+      });
       // Register event listeners
       s.on("playersUpdate", (players) =>
         dispatch({ type: "PLAYERS_UPDATE", players })
