@@ -16,7 +16,7 @@ export default function FinalView() {
   const { gameCode, user } = useLocalSearchParams();
   const router = useRouter();
   const { state, socket } = useGame();
-  const { players, scores } = state;
+  const { initialPlayers: players, scores } = state;
 
   useEffect(() => {
     socket.emit("resetGame", gameCode);

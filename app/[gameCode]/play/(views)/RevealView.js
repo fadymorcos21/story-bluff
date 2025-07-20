@@ -21,7 +21,7 @@ export default function RevealView() {
 
   const { gameCode, user } = useLocalSearchParams();
 
-  const { players, scores, story, authorId, round } = state;
+  const { initialPlayers: players, scores, story, authorId, round } = state;
 
   // Get the author username
   const authorName =
