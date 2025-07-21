@@ -181,7 +181,7 @@ export function GameProvider({ children }) {
 
       s.on("syncState", (fullState) => {
         dispatch({ type: "REHYDRATE", state: fullState });
-
+        console.log("hydrated with phase", fullState.phase);
         // if the game is already in progress, navigate into Play:
         if (fullState.phase !== "LOBBY" || fullState.round !== 0) {
           router.replace(

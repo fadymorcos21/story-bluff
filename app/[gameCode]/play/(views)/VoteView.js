@@ -28,7 +28,7 @@ export default function VoteView() {
   const voteOptions = state.initialPlayers.filter((p) => p.id !== userId);
   console.log("onMount vote options", voteOptions);
 
-  const waitingName = "Bob";
+  const waitingName = "players";
 
   // When you press an option
   const handleSelect = (id) => {

@@ -126,12 +126,7 @@ io.on("connection", (socket) => {
 
   socket.on("joinGame", async ({ gameCode, username }, cb) => {
     await redis.del(`game:${gameCode}:dc:${socket.handshake.auth.userId}`);
-    console.log("Join Call -- ", gameCode, username);
-    console.log("auth", socket.handshake.auth);
     const { userId } = socket.handshake.auth;
-    console.log(
-      `JOINING: user ${username} with userID ${userId}to game ${gameCode}`
-    );
 
     // 1. Validate game existence and status
     const reply = typeof cb === "function" ? cb : () => {};
@@ -147,6 +142,10 @@ io.on("connection", (socket) => {
     if (inProgress && !wasInitial) {
       return reply({ ok: false, error: "Game already in progress" });
     }
+
+    console.log(
+      `${wasInitial ? "RE" : ""}JOINING: -- ${username} with userID ${userId}to game ${gameCode}`
+    );
 
     // 2. Assign host if none, using userId as host identifier
     let hostId = await redis.get(`game:${gameCode}:host`);
@@ -192,7 +191,15 @@ io.on("connection", (socket) => {
         isConnected: p.isConnected,
       };
     });
-    console.log("playerList", playerList);
+    console.log(
+      "playerList:\n" +
+        playerList
+          .map(
+            (p, i) =>
+              `${i + 1}. ${p.username} (id: ${p.id}, host: ${p.isHost}, ready: ${p.ready}, connected: ${p.isConnected})`
+          )
+          .join("\n")
+    );
     io.to(gameCode).emit("playersUpdate", playerList);
 
     // 6) Now send full state back *just* to this socket for rehydration:
@@ -222,8 +229,8 @@ io.on("connection", (socket) => {
       if (list[idx]) {
         storyText = list[idx].text;
       }
-      console.log("order", list);
-      console.log("story", storyText);
+      // console.log("order", list);
+      // console.log("story", storyText);
     }
 
     const initialPlayers = Object.entries(initialRaw).map(([id, json]) => {
@@ -232,6 +239,7 @@ io.on("connection", (socket) => {
       return { id, ...p };
     });
 
+    console.log("SYNCING STATE");
     socket.emit("syncState", {
       players: playerList,
       initialPlayers: initialPlayers || [],
@@ -265,22 +273,9 @@ io.on("connection", (socket) => {
       JSON.stringify(playerData)
     );
 
-    // mark ready=true
-    // const playersRaw1 = await redis.hgetall(`game:${pin}:players`);
-    // const meRaw = playersRaw1[socket.id];
-    // if (meRaw) {
-    //   const me = JSON.parse(meRaw);
-    //   me.ready = true;
-    //   await redis.hset(
-    //     `game:${pin}:players`,
-    //     socket.auth.userId,
-    //     JSON.stringify(me)
-    //   );
-    // }
-
     // re-broadcast playersUpdate
     const playersRaw2 = await redis.hgetall(`game:${pin}:players`);
-    console.log(playersRaw2);
+    // console.log(playersRaw2);
     const updatedList = Object.entries(playersRaw2).map(([id, str]) => {
       const p = JSON.parse(str);
       return {
@@ -401,7 +396,7 @@ io.on("connection", (socket) => {
   socket.on("nextRound", async (pin) => {
     // only the host can trigger the next round
     const host = await redis.get(`game:${pin}:host`);
-    if (socket.data.userId !== host) return;
+    // if (socket.data.userId !== host) return;
 
     // pull down your pre‐shuffled storyList and current round
     const list = JSON.parse(await redis.get(`game:${pin}:storyList`));
@@ -424,42 +419,6 @@ io.on("connection", (socket) => {
     // tell everyone to move into the next round
     io.to(pin).emit("nextRound", { round: next, authorId, text });
   });
-
-  socket.on("prepareNextRound", async ({ pin, nextRound }) => {
-    // 1) Load your stored 1-based story list
-    const raw = await redis.get(`game:${pin}:storyList`);
-    if (!raw) {
-      console.log("end1");
-      return io.to(pin).emit("endGame");
-    }
-    const list = JSON.parse(raw);
-
-    // 2) Validate the requested round
-    const idx = Number(nextRound);
-    if (isNaN(idx) || idx < 1 || idx >= list.length) {
-      console.log("end2");
-      return socket.emit("errorMessage", `Invalid round: ${nextRound}`);
-    }
-
-    // 3) Grab the story for this round
-    const { authorId, text } = list[idx];
-
-    // 4) Update Redis so server-state stays in sync
-    await redis.set(`game:${pin}:currentRound`, idx);
-    await redis.set(`game:${pin}:currentAuthor`, authorId);
-
-    // 5) Emit back to **that** client (or to all if you prefer)
-    //    Here we target just the requester so each RevealView can fetch on mount
-
-    console.log(`sending back round ${idx}`);
-    socket.emit("roundPrepared", {
-      round: idx,
-      authorId,
-      text,
-    });
-  });
-
-  // inside io.on("connection", socket => { … })
 
   socket.on("resetGame", async (pin) => {
     // only the host may reset

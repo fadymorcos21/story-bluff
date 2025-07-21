@@ -34,6 +34,7 @@ export default function RevealView() {
       setCountdown((c) => {
         if (c <= 1) {
           clearInterval(timer);
+          console.log("Requested next round");
           socket.emit("nextRound", gameCode);
 
           return 0;
