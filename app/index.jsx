@@ -46,7 +46,7 @@ export default function Home() {
   // 1) on mount, load any saved username
   useEffect(() => {
     AsyncStorage.getItem("username").then((saved) => {
-      if (saved && !FEATURE_TEST_MODE) setUsername(saved);
+      if (saved && FEATURE_TEST_MODE) setUsername(saved);
     });
   }, []);
 
@@ -80,9 +80,6 @@ export default function Home() {
       const res = await fetch(`${BACKEND_URL}/create`, { method: "POST" });
       const { pin } = await res.json();
 
-      // const socket = await connectSocket(BACKEND_URL);
-      // listen for errors / alread
-      // socket.on("errorMessage", (msg) => Alert.alert("Error", msg));
       console.log(pin);
       const existingUserId = await AsyncStorage.getItem("userId");
       console.log(
@@ -108,13 +105,13 @@ export default function Home() {
         return Alert.alert("Enter both username and game pin");
       }
 
-      const socket = await connectSocket(BACKEND_URL);
+      const socket = await connectSocket(code);
 
       await AsyncStorage.setItem("username", username);
 
       socket.emit(
         "joinGame",
-        { pin: code.toUpperCase(), username },
+        { gameCode: code.toUpperCase(), username },
         (response) => {
           if (!response.ok) {
             // show why we couldn’t join (e.g. “Game not found”)

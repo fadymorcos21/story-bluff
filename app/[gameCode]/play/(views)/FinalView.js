@@ -13,7 +13,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useGame } from "../../../../context/GameContext";
 
 export default function FinalView() {
-  const { gameCode, user } = useLocalSearchParams();
+  const { gameCode, user: username } = useLocalSearchParams();
   const router = useRouter();
   const { state, socket } = useGame();
   const { initialPlayers: players, scores } = state;
@@ -36,12 +36,12 @@ export default function FinalView() {
       : `TIE BETWEEN ${winners.map((w) => w.username).join(", ")}`;
 
   // are you among the winners?
-  const amIWinner = winners.some((p) => p.username === user);
+  const amIWinner = winners.some((p) => p.username === username);
 
   const handlePlayAgain = () => {
-    socket.emit("joinGame", { pin: gameCode, username: user });
+    socket.emit("joinGame", { gameCode, username });
     // navigate to the same lobby route as create
-    router.replace(`/${gameCode}?user=${encodeURIComponent(user)}`);
+    router.replace(`/${gameCode}?user=${encodeURIComponent(username)}`);
   };
 
   return (
@@ -60,7 +60,7 @@ export default function FinalView() {
         keyExtractor={(p) => p.id}
         style={styles.scoreList}
         renderItem={({ item }) => {
-          const isMe = item.username === user;
+          const isMe = item.username === username;
           return (
             <View style={styles.scoreRow}>
               <Text style={[styles.playerName, isMe && styles.meText]}>

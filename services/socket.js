@@ -43,7 +43,7 @@ export function getSocket(url = BACKEND_URL, opts = {}) {
  * Connect the socket (if not already connected).
  * Call once on app startup or when you have your gameCode & user ready.
  */
-export async function connectSocket(pin, username) {
+export async function connectSocket(gameCode, username) {
   const userId = await getUserId();
 
   if (!socket) {
@@ -60,8 +60,8 @@ export async function connectSocket(pin, username) {
 
     // only bind once
     socket.on("connect", () => {
-      console.log("🔌 socket connected/reconnected", socket.id);
-      socket.emit("joinGame", { pin, username, userId });
+      console.log("🔌 socket connected/reconnected", gameCode, socket.id);
+      socket.emit("joinGame", { gameCode, username });
     });
     socket.on("disconnect", (reason) => {
       console.log("⚠️ socket disconnected:", reason);

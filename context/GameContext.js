@@ -104,7 +104,7 @@ export function GameProvider({ children }) {
   const { gameCode } = useLocalSearchParams();
   const router = useRouter();
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { user } = useGlobalSearchParams();
+  const { user: username } = useGlobalSearchParams();
 
   // Hold the socket instance in state so components can use it safely
   const [socket, setSocket] = useState(null);
@@ -114,7 +114,7 @@ export function GameProvider({ children }) {
     let isMounted = true;
 
     (async () => {
-      const s = await connectSocket(gameCode, user);
+      const s = await connectSocket(gameCode, username);
       if (!isMounted) return;
       setUserId(s.auth.userId);
       if (!isMounted) return;
@@ -125,11 +125,11 @@ export function GameProvider({ children }) {
       // console.log(
       //   `navigating user ${user} with ${existingUserId} to game ${gameCode}`
       // );
+      console.log("GAME CODEPIN: ", gameCode);
 
       s.emit("joinGame", {
-        pin: gameCode,
-        username: user,
-        // userId: existingUserId,
+        gameCode,
+        username,
       });
 
       // s.on("connect", () => {
@@ -140,7 +140,7 @@ export function GameProvider({ children }) {
       s.on("reconnect", (attempt) => {
         console.log("🔄 socket reconnected (attempt", attempt, ")");
         // re-join the game and re-hydrate
-        s.emit("joinGame", { pin: gameCode, username: user });
+        s.emit("joinGame", { pin: gameCode, username: username });
       });
       // Register event listeners
       s.on("playersUpdate", (players) =>
@@ -155,7 +155,9 @@ export function GameProvider({ children }) {
           text,
           initialPlayers,
         });
-        router.replace(`/${gameCode}/play?user=${encodeURIComponent(user)}`);
+        router.replace(
+          `/${gameCode}/play?user=${encodeURIComponent(username)}`
+        );
       });
 
       s.on("nextRound", ({ round, authorId, text }) =>
@@ -182,7 +184,9 @@ export function GameProvider({ children }) {
 
         // if the game is already in progress, navigate into Play:
         if (fullState.phase !== "LOBBY" || fullState.round !== 0) {
-          router.replace(`/${gameCode}/play?user=${encodeURIComponent(user)}`);
+          router.replace(
+            `/${gameCode}/play?user=${encodeURIComponent(username)}`
+          );
         }
       });
 
@@ -197,7 +201,9 @@ export function GameProvider({ children }) {
   }, [gameCode]);
 
   return (
-    <GameContext.Provider value={{ state, dispatch, socket, userId }}>
+    <GameContext.Provider
+      value={{ state, dispatch, socket, userId, user: username, gameCode }}
+    >
       {children}
     </GameContext.Provider>
   );
