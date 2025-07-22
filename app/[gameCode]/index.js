@@ -1,5 +1,4 @@
 // app/[gameCode]/index.js
-import { TEST_MODE } from "@env";
 import { useEffect, useState, useRef } from "react";
 import {
   SafeAreaView,
@@ -22,7 +21,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useGame } from "../../context/GameContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const devMode = TEST_MODE?.toLowerCase() === "true";
 const MAX_STORIES = 5;
 const MIN_STORIES = 3;
 const BOOK_KEY = "@MyStoryBook:stories";
@@ -30,7 +28,6 @@ const BOOK_KEY = "@MyStoryBook:stories";
 export default function GameLobby() {
   const { state, socket, userId } = useGame();
 
-  console.log("WAAAAAAAAH", userId);
   const screenHeight = Dimensions.get("window").height;
   const slideAnim = useRef(new Animated.Value(screenHeight)).current;
   const { gameCode, user } = useLocalSearchParams();
@@ -46,10 +43,8 @@ export default function GameLobby() {
   const allReady =
     players.length >= MIN_STORIES && players.every((p) => p.ready);
 
-  const [stories, setStories] = useState(() => {
-    if (devMode) return Array(MIN_STORIES).fill(`${user} `.repeat(4));
-    return Array(MIN_STORIES).fill("");
-  });
+  const [stories, setStories] = useState(Array(MIN_STORIES).fill(""));
+
   const [editingIndex, setEditingIndex] = useState(null);
   const [draftText, setDraftText] = useState("");
 
@@ -119,22 +114,20 @@ export default function GameLobby() {
   const submitStories = async () => {
     if (!socket) return Alert.alert("Error", "Not connected");
     socket.emit("submitStories", { pin: gameCode, stories });
-    if (!devMode) {
-      try {
-        const raw = await AsyncStorage.getItem(BOOK_KEY);
-        const existing = raw ? JSON.parse(raw) : [];
-        const newEntries = stories.map((t, i) => ({
-          id: `${gameCode}-${user}-${Date.now()}-${i}`,
-          name: "",
-          text: t,
-        }));
-        await AsyncStorage.setItem(
-          BOOK_KEY,
-          JSON.stringify([...newEntries, ...existing])
-        );
-      } catch (e) {
-        console.error("Failed to cache stories:", e);
-      }
+    try {
+      const raw = await AsyncStorage.getItem(BOOK_KEY);
+      const existing = raw ? JSON.parse(raw) : [];
+      const newEntries = stories.map((t, i) => ({
+        id: `${gameCode}-${user}-${Date.now()}-${i}`,
+        name: "",
+        text: t,
+      }));
+      await AsyncStorage.setItem(
+        BOOK_KEY,
+        JSON.stringify([...newEntries, ...existing])
+      );
+    } catch (e) {
+      console.error("Failed to cache stories:", e);
     }
   };
 

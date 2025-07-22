@@ -1,5 +1,4 @@
 // app/[gameCode]/play/views/RoundView.js
-import { BACKEND_URL, TEST_MODE } from "@env";
 
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated, Dimensions } from "react-native";
@@ -8,7 +7,6 @@ import { useGame } from "../../../../context/GameContext";
 
 export default function RoundView() {
   // Testing
-  const FEATURE_TEST_MODE = TEST_MODE?.toLowerCase() === "true";
 
   const { state, dispatch } = useGame();
   const { round, story } = state;
@@ -51,17 +49,14 @@ export default function RoundView() {
 
     Animated.timing(progress, {
       toValue: 1,
-      duration: FEATURE_TEST_MODE ? 1000 : 30000,
+      duration: 25000,
       useNativeDriver: false,
     }).start();
 
     // Schedule vote transition separately
-    timeout = setTimeout(
-      () => {
-        dispatch({ type: "START_VOTE" });
-      },
-      FEATURE_TEST_MODE ? 1000 : 30000
-    );
+    timeout = setTimeout(() => {
+      dispatch({ type: "START_VOTE" });
+    }, 25000);
 
     return () => {
       clearTimeout(timeout);

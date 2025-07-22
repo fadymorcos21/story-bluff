@@ -1,5 +1,5 @@
 // app/index.jsx
-import { BACKEND_URL, TEST_MODE } from "@env";
+import { BACKEND_URL } from "@env";
 
 import { useState, useRef, useEffect } from "react";
 import {
@@ -26,46 +26,23 @@ import { connectSocket } from "../services/socket";
 import "./../global.css";
 import { Ionicons } from "@expo/vector-icons";
 
-// Testing Purposes
-const FEATURE_TEST_MODE = TEST_MODE?.toLowerCase() === "true";
-
-const generateRandomUsername = (length = 6) =>
-  Math.random()
-    .toString(36) // turn to base-36 (0–9, a–z)
-    .substring(2, 2 + length);
-
 export default function Home() {
   const router = useRouter();
 
-  const initialUsername = FEATURE_TEST_MODE
-    ? `user_${generateRandomUsername()}`
-    : "";
-
-  const [username, setUsername] = useState(initialUsername);
+  const [username, setUsername] = useState("");
 
   // 1) on mount, load any saved username
   useEffect(() => {
     AsyncStorage.getItem("username").then((saved) => {
-      if (saved && FEATURE_TEST_MODE) setUsername(saved);
+      if (saved) setUsername(saved);
     });
   }, []);
 
   const [isKeyboardVisible, setKeyboardVisible] = useState("");
 
-  // FOR TESTNG - to remove from here
   const anim = useRef(new Animated.Value(0)).current;
 
-  // TEST-START   - uncomment for testing
-  {
-    FEATURE_TEST_MODE &&
-      Animated.timing(anim, {
-        toValue: 1.1, // change back to 1
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
-  }
-  // TEST-END
-  const [revealed, setRevealed] = useState(FEATURE_TEST_MODE ? true : false);
+  const [revealed, setRevealed] = useState(false);
   const [code, setCode] = useState("");
   const [createBtnWidth, setCreateBtnWidth] = useState(null);
   const screenWidth = Dimensions.get("window").width - 32;
@@ -80,7 +57,6 @@ export default function Home() {
       const res = await fetch(`${BACKEND_URL}/create`, { method: "POST" });
       const { pin } = await res.json();
 
-      console.log(pin);
       const existingUserId = await AsyncStorage.getItem("userId");
       console.log(
         `navigating user ${username} with ${existingUserId} to game ${pin}`
@@ -94,7 +70,7 @@ export default function Home() {
 
   const handleJoinPress = async () => {
     if (!revealed) {
-      setRevealed(FEATURE_TEST_MODE ? false : true);
+      setRevealed(true);
       Animated.timing(anim, {
         toValue: 1,
         duration: 300,
@@ -114,12 +90,11 @@ export default function Home() {
         { gameCode: code.toUpperCase(), username },
         (response) => {
           if (!response.ok) {
-            // show why we couldn’t join (e.g. “Game not found”)
+            // show why we couldn’t join
             // use Alert in app production
             // Alert.alert("Error", response.error);
-            return alert(response.error);
+            return Alert.alert("Error", response.error);
           }
-          // ✅ only navigate when server says OK
           router.replace(
             `/${code.toUpperCase()}?user=${encodeURIComponent(username)}`
           );
