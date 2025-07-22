@@ -47,15 +47,27 @@ export default function RoundView() {
   const catchPhrase = messages[Math.floor(Math.random() * messages.length)];
 
   useEffect(() => {
-    // animate from 0 → 1 over 30s, then kick off voting
+    let timeout;
+
     Animated.timing(progress, {
       toValue: 1,
-      duration: FEATURE_TEST_MODE ? 1_000 : 30_000,
+      duration: FEATURE_TEST_MODE ? 1000 : 30000,
       useNativeDriver: false,
-    }).start(() => {
-      dispatch({ type: "START_VOTE" });
-    });
-  }, [progress]);
+    }).start();
+
+    // Schedule vote transition separately
+    timeout = setTimeout(
+      () => {
+        dispatch({ type: "START_VOTE" });
+      },
+      FEATURE_TEST_MODE ? 1000 : 30000
+    );
+
+    return () => {
+      clearTimeout(timeout);
+      progress.stopAnimation(); // clean up if unmounted
+    };
+  }, []);
 
   const barWidth = progress.interpolate({
     inputRange: [0, 1],
