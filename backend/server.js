@@ -12,6 +12,15 @@ const redis = new Redis({
   port: 6379,
 });
 
+const Redlock = require("redlock");
+const redlock = new Redlock([redis], {
+  // don’t retry acquiring the lock
+  retryCount: 0,
+  // optional back-off settings
+  retryDelay: 200,
+  retryJitter: 200,
+});
+
 redis
   .config("SET", "notify-keyspace-events", "Ex")
   .then(() => console.log("✅ Redis keyspace notifications enabled"))
@@ -169,7 +178,8 @@ io.on("connection", (socket) => {
         isConnected: true,
       };
       await redis.hset(playerKey, userId, JSON.stringify(playerObj));
-      await redis.hset(`game:${gameCode}:scores`, userId, 0);
+      // await redis.hset(`game:${gameCode}:scores`, userId, 0);
+      await redis.hsetnx(`game:${gameCode}:scores`, userId, 0);
     } else {
       // Player rejoining – update username if it changed (keep isHost/ready flags)
       const playerObj = JSON.parse(existingData);
@@ -392,33 +402,74 @@ io.on("connection", (socket) => {
     });
   });
 
-  // server.js (inside io.on("connection", …))
-  socket.on("nextRound", async (pin) => {
-    // only the host can trigger the next round
-    const host = await redis.get(`game:${pin}:host`);
-    // if (socket.data.userId !== host) return;
-
-    // pull down your pre‐shuffled storyList and current round
-    const list = JSON.parse(await redis.get(`game:${pin}:storyList`));
+  socket.on("nextRound", async ({ pin, roundKey }) => {
     const current = Number(await redis.get(`game:${pin}:currentRound`)) || 1;
+    const lockKey = `lock:game:${pin}:advance:${roundKey}`;
+
+    console.log("KEY: ", roundKey);
+    let lock;
+    try {
+      // grab a 10s lock (throws if already locked)
+      lock = await redlock.lock(lockKey, 10_000);
+    } catch {
+      return; // someone else is already advancing the round
+    }
+
+    const list = JSON.parse(await redis.get(`game:${pin}:storyList`));
     const next = current + 1;
 
-    // if we’ve exhausted the list, end the game
     if (next >= list.length) {
+      await lock.unlock();
       return io.to(pin).emit("gameEnded");
     }
 
-    // —— NEW: clear out last round’s votes ——
+    // clear votes, bump round & author, broadcast
     await redis.del(`game:${pin}:votes`);
-
-    // advance the round pointer and set the new author
-    await redis.set(`game:${pin}:currentRound`, next);
     const { authorId, text } = list[next];
-    await redis.set(`game:${pin}:currentAuthor`, authorId);
-
-    // tell everyone to move into the next round
+    await Promise.all([
+      redis.set(`game:${pin}:currentRound`, next),
+      redis.set(`game:${pin}:currentAuthor`, authorId),
+    ]);
     io.to(pin).emit("nextRound", { round: next, authorId, text });
+
+    // release the lock so others can advance
+    await lock.unlock();
   });
+
+  // socket.on("nextRound", async (pin) => {
+  //   // only the host can trigger the next round
+  //   // const host = await redis.get(`game:${pin}:host`);
+  //   // if (socket.data.userId !== host) return;
+  //   const current = Number(await redis.get(`game:${pin}:currentRound`)) || 1;
+  //   const lockKey = `game:${pin}:round:${current}:advance`;
+  //   // NX means “only set if not already set”, EX 10 gives it a 10s TTL
+  //   const gotLock = await redis.set(lockKey, "1", "NX", "EX", 10);
+  //   if (!gotLock) {
+  //     // someone else already advanced us
+  //     return;
+  //   }
+  //   console.log("-------------------------------RAN ", current);
+  //   // pull down your pre‐shuffled storyList and current round
+  //   const list = JSON.parse(await redis.get(`game:${pin}:storyList`));
+  //   // const current = Number(await redis.get(`game:${pin}:currentRound`)) || 1;
+  //   const next = current + 1;
+
+  //   // if we’ve exhausted the list, end the game
+  //   if (next >= list.length) {
+  //     return io.to(pin).emit("gameEnded");
+  //   }
+
+  //   // —— NEW: clear out last round’s votes ——
+  //   await redis.del(`game:${pin}:votes`);
+
+  //   // advance the round pointer and set the new author
+  //   await redis.set(`game:${pin}:currentRound`, next);
+  //   const { authorId, text } = list[next];
+  //   await redis.set(`game:${pin}:currentAuthor`, authorId);
+
+  //   // tell everyone to move into the next round
+  //   io.to(pin).emit("nextRound", { round: next, authorId, text });
+  // });
 
   socket.on("resetGame", async (pin) => {
     // only the host may reset
