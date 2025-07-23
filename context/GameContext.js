@@ -121,24 +121,14 @@ export function GameProvider({ children }) {
 
       setSocket(s);
 
-      // const existingUserId = await AsyncStorage.getItem("userId");
-      // console.log(
-      //   `navigating user ${user} with ${existingUserId} to game ${gameCode}`
-      // );
-      console.log("GAME CODEPIN: ", gameCode);
+      console.log("Game pin: ", gameCode);
 
       s.emit("joinGame", {
         gameCode,
         username,
       });
 
-      // s.on("connect", () => {
-      //   console.log("socket reconnected → rejoining game");
-      //   s.emit("joinGame", { pin: gameCode, username: user, userId: userId });
-      // });
-
       s.on("reconnect", (attempt) => {
-        console.log("🔄 socket reconnected (attempt", attempt, ")");
         // re-join the game and re-hydrate
         s.emit("joinGame", { pin: gameCode, username: username });
       });

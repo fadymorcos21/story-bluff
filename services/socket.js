@@ -16,9 +16,7 @@ async function getUserId() {
     userId = nanoid();
     await AsyncStorage.setItem("userId", userId);
   }
-  // AsyncStorage.removeItem("userId")
-  //   .then(() => console.log("userId removed"))
-  //   .catch((err) => console.error("Failed to remove userId:", err));
+
   return userId;
 }
 
@@ -60,17 +58,14 @@ export async function connectSocket(gameCode, username) {
 
     // only bind once
     socket.on("connect", () => {
-      console.log("🔌 socket connected/reconnected", gameCode, socket.id);
+      console.log("Socket connected/reconnected", gameCode, socket.id);
       socket.emit("joinGame", { gameCode, username });
     });
     socket.on("disconnect", (reason) => {
-      console.log("⚠️ socket disconnected:", reason);
+      console.log("Socket disconnected:", reason);
     });
-    console.log("WASNT SOCKET");
   } else {
     socket.auth = { userId };
-
-    console.log("YES SOCKET");
   }
 
   if (!socket.connected) {
