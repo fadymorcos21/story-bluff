@@ -80,7 +80,7 @@ subscriber.on("message", async (_chan, expiredKey) => {
 });
 
 // Helpers
-function makePin(length = 1) {
+function makePin(length = 6) {
   return [...Array(length)]
     .map(() => Math.random().toString(36)[2])
     .join("")

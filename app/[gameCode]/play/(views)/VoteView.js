@@ -23,19 +23,15 @@ export default function VoteView() {
   const [showScores, setShowScores] = useState(false);
   const toggleScores = () => setShowScores((prev) => !prev);
 
-  // const voteOptions = players.filter((p) => p.username !== user);
-  // NEW: vote options come from the original snapshot (minus the player)
   const voteOptions = state.initialPlayers.filter((p) => p.id !== userId);
 
   const waitingName = "players";
 
-  // When you press an option
   const handleSelect = (id) => {
     if (hasVoted) return;
     setSelected(id);
   };
 
-  // Send your vote to the server
   const finalize = () => {
     if (!selected || hasVoted) return;
     socket.emit("vote", { pin: gameCode, choiceId: selected });

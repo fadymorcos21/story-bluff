@@ -41,14 +41,14 @@ export default function RoundView() {
 
     Animated.timing(progress, {
       toValue: 1,
-      duration: 25000,
+      duration: 20000,
       useNativeDriver: false,
     }).start();
 
     // Schedule vote transition separately
     timeout = setTimeout(() => {
       dispatch({ type: "START_VOTE" });
-    }, 25000);
+    }, 20000);
 
     return () => {
       clearTimeout(timeout);
