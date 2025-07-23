@@ -15,9 +15,10 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.fadymorcos21.storybluff",
-        "buildNumber": "1.0.0"
-
-
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "versionCode": 1,
@@ -33,6 +34,12 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ca83fc9f-4f5a-4bda-ad14-43db8467352b"
+      }
+    }
   }
 }
