@@ -22,7 +22,7 @@ async function getUserId() {
 
 /**
  * Initialize (or reuse) a socket.io connection.
- * @param {string} url  your backend base URL, e.g. "http://localhost:5000"
+ * @param {string} url  your backend base URL,
  * @param {object} opts optional io() options
  * @returns {import("socket.io-client").Socket}
  */
@@ -39,7 +39,6 @@ export function getSocket(url = BACKEND_URL, opts = {}) {
 
 /**
  * Connect the socket (if not already connected).
- * Call once on app startup or when you have your gameCode & user ready.
  */
 export async function connectSocket(gameCode, username) {
   const userId = await getUserId();
@@ -76,7 +75,6 @@ export async function connectSocket(gameCode, username) {
 
 /**
  * Disconnect (and clear) the socket.
- * Call on cleanup or when user leaves.
  */
 export function disconnectSocket() {
   if (socket) {

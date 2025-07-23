@@ -74,7 +74,6 @@ export default function RevealView() {
         <FlatList
           data={sorted}
           keyExtractor={(p) => p.id}
-          // style={styles.scoreList}
           renderItem={({ item }) => {
             const isMe = item.username === user;
             return (
@@ -114,7 +113,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 42,
     fontWeight: "bold",
-    color: "#FFC700", // gold
+    color: "#FFC700",
     marginBottom: 6,
     width: width * 0.85,
     textAlign: "center",

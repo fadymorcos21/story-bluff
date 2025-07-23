@@ -35,7 +35,6 @@ export default function FinalView() {
       ? `${winners[0].username} WINS!`
       : `TIE BETWEEN ${winners.map((w) => w.username).join(", ")}`;
 
-  // are you among the winners?
   const amIWinner = winners.some((p) => p.username === username);
 
   const handlePlayAgain = () => {

@@ -90,7 +90,7 @@ export default function Home() {
         { gameCode: code.toUpperCase(), username },
         (response) => {
           if (!response.ok) {
-            // show why we couldn’t join
+            // show why user couldn’t join
             // use Alert in app production
             // Alert.alert("Error", response.error);
             return Alert.alert("Error", response.error);

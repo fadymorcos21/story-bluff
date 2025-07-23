@@ -11,30 +11,22 @@ export default function RoundView() {
   const { state, dispatch } = useGame();
   const { round, story } = state;
   const progress = useRef(new Animated.Value(0)).current;
-  const fullWidth = Dimensions.get("window").width - 40; // account for 20px padding each side
+  const fullWidth = Dimensions.get("window").width - 40;
 
-  // All brainstormed text ideas in one array
   const messages = [
-    // 🎭 Bluff & Suspense Theme
     "Could *you* keep a straight face?",
     "The author is among you...",
     "Don’t let your face give it away.",
     "Everyone pretend it’s not yours.",
     "Blend in. Bluff hard.",
-
-    // 🕵️ Mystery/Sleuth Vibes
     "Analyze every word...",
     "Who would write this?",
     "Your detective skills start now.",
     "Watch for nervous laughter...",
-
-    // 🎤 Fun & Light-Hearted
     "Story time with a twist.",
     "Bet you didn’t expect *that*.",
     "Somebody here lived this…",
     "Get ready to spill the beans.",
-
-    // 🔄 Instructional / Neutral
     "You’ll vote in just a moment…",
     "Reading in progress...",
     "Get familiar with the story…",

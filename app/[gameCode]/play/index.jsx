@@ -1,6 +1,6 @@
 // app/[gameCode]/play/index.jsx
 import { useGame } from "../../../context/GameContext";
-import { Text } from "react-native"; // <-- make sure this is here
+import { Text } from "react-native";
 
 import RevealView from "./(views)/RevealView";
 import RoundView from "./(views)/RoundView";

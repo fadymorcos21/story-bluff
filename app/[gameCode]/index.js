@@ -61,8 +61,6 @@ export default function GameLobby() {
   );
 
   function openPicker() {
-    // keep which slot we're editing, just dismiss its native Modal
-    // setEditingIndex(null);
     Keyboard.dismiss();
     setSearchTerm("");
     setPickerVisible(true);

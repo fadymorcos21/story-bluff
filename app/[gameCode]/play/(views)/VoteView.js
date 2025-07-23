@@ -26,7 +26,6 @@ export default function VoteView() {
   // const voteOptions = players.filter((p) => p.username !== user);
   // NEW: vote options come from the original snapshot (minus the player)
   const voteOptions = state.initialPlayers.filter((p) => p.id !== userId);
-  console.log("onMount vote options", voteOptions);
 
   const waitingName = "players";
 
@@ -41,15 +40,12 @@ export default function VoteView() {
     if (!selected || hasVoted) return;
     socket.emit("vote", { pin: gameCode, choiceId: selected });
     setHasVoted(true);
-    console.log("voted");
-    console.log(scores);
   };
 
   // Render each player as a voting option
   const renderItem = ({ item }) => {
     const isSelected = item.id === selected;
     // gather all voters who chose this item
-    console.log(votes);
     const voters = Object.entries(votes)
       .filter(([, choiceId]) => choiceId === item.id)
       .map(([voterId]) => {
@@ -72,7 +68,6 @@ export default function VoteView() {
         >
           {item.username}
         </Text>
-        {/* {console.log(voters)} */}
         {console.log(
           "renderItem for",
           item.id,
