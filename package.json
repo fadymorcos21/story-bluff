@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.1.2",
+    "dotenv": "^17.2.0",
     "expo": "~53.0.12",
     "expo-constants": "~17.1.6",
     "expo-linear-gradient": "~14.1.5",
