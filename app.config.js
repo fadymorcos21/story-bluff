@@ -1,5 +1,4 @@
 // app.config.js
-
 export default {
   name: "story-bluff",
   slug: "story-bluff",
@@ -15,7 +14,7 @@ export default {
   ios: {
     supportsTablet: false,
     bundleIdentifier: "com.fadymorcos21.storybluff",
-    buildNumber: "1.0.15",
+    buildNumber: "1.0.16",
     privacyManifests: {
       NSPrivacyCollectedDataTypes: [],
       NSPrivacyAccessedAPITypes: [
