@@ -2,6 +2,7 @@
 import * as Sentry from "sentry-expo";
 import Constants from "expo-constants";
 import { useState, useRef, useEffect } from "react";
+import "expo-router/entry";
 import {
   SafeAreaView,
   View,
@@ -32,9 +33,10 @@ Sentry.init({
   debug: true,
 });
 
-const extra = Constants.expoConfig.extra;
-console.log(extra);
-const BACKEND_URL = extra.BACKEND_URL;
+const BACKEND_URL =
+  Constants?.expoConfig?.extra?.BACKEND_URL ??
+  Constants?.manifest?.extra?.BACKEND_URL ??
+  "http://localhost:5000"; // fallback if undefined
 console.log(BACKEND_URL);
 
 export default function Home() {

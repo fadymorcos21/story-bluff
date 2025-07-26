@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 16.17.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -14,7 +14,6 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_ENV": "production",
         "BACKEND_URL": "https://resistnce-game-srver-app.store",
         "TEST_MODE": "FALSE"
       }
