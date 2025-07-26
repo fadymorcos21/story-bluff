@@ -1,5 +1,5 @@
 // app/index.jsx
-import * as Sentry from "sentry-expo";
+// import * as Sentry from "sentry-expo";
 import Constants from "expo-constants";
 import { useState, useRef, useEffect } from "react";
 import "expo-router/entry";
@@ -27,11 +27,11 @@ import { connectSocket } from "../services/socket";
 import "./../global.css";
 import { Ionicons } from "@expo/vector-icons";
 
-Sentry.init({
-  dsn: "https://aa2a39afffacdb421373fa04ebe21905@o4508060621209600.ingest.us.sentry.io/4509732744069120",
-  enableInExpoDevelopment: true,
-  debug: true,
-});
+// Sentry.init({
+//   dsn: "https://aa2a39afffacdb421373fa04ebe21905@o4508060621209600.ingest.us.sentry.io/4509732744069120",
+//   enableInExpoDevelopment: true,
+//   debug: true,
+// });
 
 const BACKEND_URL =
   Constants?.expoConfig?.extra?.BACKEND_URL ??

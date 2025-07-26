@@ -24,10 +24,16 @@
       },
       "edgeToEdgeEnabled": true
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "extra": {
       "BACKEND_URL": "https://resistnce-game-srver-app.store",
-      "TEST_MODE": "FALSE"
+      "TEST_MODE": "FALSE",
+      "router": {},
+      "eas": {
+        "projectId": "ca83fc9f-4f5a-4bda-ad14-43db8467352b"
+      }
     }
   }
 }
