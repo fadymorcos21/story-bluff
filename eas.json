@@ -12,7 +12,12 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_ENV": "production",
+        "BACKEND_URL": "https://resistnce-game-srver-app.store",
+        "TEST_MODE": "FALSE"
+      }
     }
   },
   "submit": {

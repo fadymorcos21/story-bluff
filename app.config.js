@@ -1,6 +1,4 @@
 // app.config.js
-import "dotenv/config";
-
 export default {
   expo: {
     name: "story-bluff",

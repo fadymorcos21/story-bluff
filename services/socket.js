@@ -1,6 +1,7 @@
 // services/socket.js
 import Constants from "expo-constants";
-const { BACKEND_URL } = Constants.expoConfig.extra;
+const extra = Constants.expoConfig.extra;
+const BACKEND_URL = extra.BACKEND_URL;
 import { io } from "socket.io-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { nanoid } from "nanoid/non-secure";

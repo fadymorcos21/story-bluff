@@ -32,7 +32,10 @@ Sentry.init({
   debug: true,
 });
 
-const { BACKEND_URL } = Constants.expoConfig.extra;
+const extra = Constants.expoConfig.extra;
+console.log(extra);
+const BACKEND_URL = extra.BACKEND_URL;
+console.log(BACKEND_URL);
 
 export default function Home() {
   const router = useRouter();
