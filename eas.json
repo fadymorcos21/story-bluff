@@ -12,7 +12,9 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
+      "ios": {
+        "resourceClass": "m1-medium"
+      },
       "env": {
         "BACKEND_URL": "https://resistnce-game-srver-app.store",
         "TEST_MODE": "FALSE"
