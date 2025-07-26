@@ -1,6 +1,7 @@
 // app/index.jsx
-import { BACKEND_URL } from "@env";
-
+import * as Sentry from "sentry-expo";
+import Constants from "expo-constants";
+const { BACKEND_URL } = Constants.expoConfig.extra;
 import { useState, useRef, useEffect } from "react";
 import {
   SafeAreaView,
@@ -25,6 +26,12 @@ import { useRouter } from "expo-router";
 import { connectSocket } from "../services/socket";
 import "./../global.css";
 import { Ionicons } from "@expo/vector-icons";
+
+Sentry.init({
+  dsn: Constants.expoConfig.extra.sentry.dsn,
+  enableInExpoDevelopment: true,
+  debug: true,
+});
 
 export default function Home() {
   const router = useRouter();
