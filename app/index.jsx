@@ -1,7 +1,6 @@
 // app/index.jsx
 import * as Sentry from "sentry-expo";
 import Constants from "expo-constants";
-const { BACKEND_URL } = Constants.expoConfig.extra;
 import { useState, useRef, useEffect } from "react";
 import {
   SafeAreaView,
@@ -32,6 +31,8 @@ Sentry.init({
   enableInExpoDevelopment: true,
   debug: true,
 });
+
+const { BACKEND_URL } = Constants.expoConfig.extra;
 
 export default function Home() {
   const router = useRouter();
