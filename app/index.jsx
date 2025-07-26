@@ -28,7 +28,7 @@ import "./../global.css";
 import { Ionicons } from "@expo/vector-icons";
 
 Sentry.init({
-  dsn: Constants.expoConfig.extra.sentry.dsn,
+  dsn: "https://aa2a39afffacdb421373fa04ebe21905@o4508060621209600.ingest.us.sentry.io/4509732744069120",
   enableInExpoDevelopment: true,
   debug: true,
 });
