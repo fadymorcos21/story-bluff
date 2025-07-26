@@ -6,13 +6,11 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
-    "prebuild": "node fix-privacy-conflict.js"
-
+    "web": "expo start --web"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.1.2",
-    "@sentry/react-native": "^5.10.0",
+    "@sentry/react-native": "~6.14.0",
     "dotenv": "^17.2.0",
     "expo": "~53.0.12",
     "expo-constants": "~17.1.6",
@@ -25,15 +23,14 @@
     "nativewind": "^4.1.23",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-native": "0.79.4",
+    "react-native": "0.79.5",
     "react-native-dotenv": "^3.4.11",
     "react-native-get-random-values": "^1.11.0",
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-reanimated": "~3.17.4",
-    "react-native-safe-area-context": "^5.4.0",
+    "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-web": "^0.20.0",
-    "sentry-expo": "^7.2.0",
     "socket.io-client": "^4.8.1",
     "tslib": "^2.6.2",
     "uninstall": "^0.0.0"

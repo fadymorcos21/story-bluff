@@ -10,34 +10,52 @@ export default {
   splash: {
     image: "./assets/splash-icon.png",
     resizeMode: "contain",
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
   },
   ios: {
     supportsTablet: false,
     bundleIdentifier: "com.fadymorcos21.storybluff",
-    buildNumber: "1.0.14",
-    infoPlist: {
-      ITSAppUsesNonExemptEncryption: false
-    }
+    buildNumber: "1.0.15",
+    privacyManifests: {
+      NSPrivacyCollectedDataTypes: [],
+      NSPrivacyAccessedAPITypes: [
+        {
+          NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryUserDefaults",
+          NSPrivacyAccessedAPITypeReasons: ["CA92.1"],
+        },
+        {
+          NSPrivacyAccessedAPIType:
+            "NSPrivacyAccessedAPICategorySystemBootTime",
+          NSPrivacyAccessedAPITypeReasons: ["35F9.1"],
+        },
+        {
+          NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryFileTimestamp",
+          NSPrivacyAccessedAPITypeReasons: ["C617.1"],
+        },
+      ],
+    },
   },
   android: {
     versionCode: 1,
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#ffffff"
+      backgroundColor: "#ffffff",
     },
-    edgeToEdgeEnabled: true
+    edgeToEdgeEnabled: true,
   },
   plugins: [
     "expo-router",
-    "./plugins/removeDuplicatePrivacyFiles" // 👈 plugin to fix xcprivacy duplication
+    // "./plugins/removeDuplicatePrivacyFiles",
   ],
   extra: {
     BACKEND_URL: "https://resistnce-game-srver-app.store",
     TEST_MODE: "FALSE",
     router: {},
     eas: {
-      projectId: "ca83fc9f-4f5a-4bda-ad14-43db8467352b"
-    }
-  }
+      projectId: "ca83fc9f-4f5a-4bda-ad14-43db8467352b",
+    },
+    sentry: {
+      disableProfiling: true,
+    },
+  },
 };

@@ -1,5 +1,7 @@
 // app/index.jsx
 // import * as Sentry from "sentry-expo";
+import * as Sentry from "@sentry/react-native";
+
 import Constants from "expo-constants";
 import { useState, useRef, useEffect } from "react";
 import "expo-router/entry";
@@ -32,6 +34,16 @@ import { Ionicons } from "@expo/vector-icons";
 //   enableInExpoDevelopment: true,
 //   debug: true,
 // });
+
+Sentry.init({
+  dsn: "https://aa2a39afffacdb421373fa04ebe21905@o4508060621209600.ingest.us.sentry.io/4509732744069120",
+  enableNative: true,
+  enableNativeNagger: true,
+  tracesSampleRate: 1.0,
+  _experiments: {
+    profilesSampleRate: 0,
+  },
+});
 
 const BACKEND_URL =
   Constants?.expoConfig?.extra?.BACKEND_URL ??
