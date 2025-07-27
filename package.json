@@ -1,7 +1,7 @@
 {
   "name": "story-bluff",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "app/entry.sentry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -31,6 +31,7 @@
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-web": "^0.20.0",
+    "sentry-expo": "^7.2.0",
     "socket.io-client": "^4.8.1",
     "tslib": "^2.6.2",
     "uninstall": "^0.0.0"

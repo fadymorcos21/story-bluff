@@ -14,7 +14,7 @@ export default {
   ios: {
     supportsTablet: false,
     bundleIdentifier: "com.fadymorcos21.storybluff",
-    buildNumber: "1.0.16",
+    buildNumber: "1.0.17",
     privacyManifests: {
       NSPrivacyCollectedDataTypes: [],
       NSPrivacyAccessedAPITypes: [
@@ -44,6 +44,7 @@ export default {
   },
   plugins: [
     "expo-router",
+    "sentry-expo",
     // "./plugins/removeDuplicatePrivacyFiles",
   ],
   extra: {

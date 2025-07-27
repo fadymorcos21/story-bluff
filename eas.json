@@ -3,6 +3,7 @@
     "version": ">= 16.17.0",
     "appVersionSource": "local"
   },
+  
   "build": {
     "development": {
       "developmentClient": true,
@@ -17,7 +18,8 @@
       },
       "env": {
         "BACKEND_URL": "https://resistnce-game-srver-app.store",
-        "TEST_MODE": "FALSE"
+        "TEST_MODE": "FALSE",
+        "SENTRY_AUTH_TOKEN": "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"
       }
     }
   },
