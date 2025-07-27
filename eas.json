@@ -14,7 +14,8 @@
     },
     "production": {
       "ios": {
-        "resourceClass": "m1-medium"
+        "resourceClass": "m-medium"
+        
       },
       "env": {
         "BACKEND_URL": "https://resistnce-game-srver-app.store",
