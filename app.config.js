@@ -11,6 +11,9 @@ export default {
     resizeMode: "contain",
     backgroundColor: "#ffffff",
   },
+  expo: {
+    jsEngine: "jsc",
+  },
   ios: {
     supportsTablet: false,
     bundleIdentifier: "com.fadymorcos21.storybluff",
