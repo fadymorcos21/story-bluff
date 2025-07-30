@@ -11,13 +11,22 @@ export default {
     resizeMode: "contain",
     backgroundColor: "#ffffff",
   },
-  expo: {
-    jsEngine: "jsc",
+  extra: {
+    BACKEND_URL: "https://resistnce-game-srver-app.store",
+    TEST_MODE: "FALSE",
+    router: {},
+    eas: {
+      projectId: "ca83fc9f-4f5a-4bda-ad14-43db8467352b",
+    },
+    sentry: {
+      disableProfiling: true,
+    },
   },
+  jsEngine: "jsc",
   ios: {
     supportsTablet: false,
     bundleIdentifier: "com.fadymorcos21.storybluff",
-    buildNumber: "1.0.18",
+    buildNumber: "1.0.21",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -53,15 +62,4 @@ export default {
     "sentry-expo",
     // "./plugins/removeDuplicatePrivacyFiles",
   ],
-  extra: {
-    BACKEND_URL: "https://resistnce-game-srver-app.store",
-    TEST_MODE: "FALSE",
-    router: {},
-    eas: {
-      projectId: "ca83fc9f-4f5a-4bda-ad14-43db8467352b",
-    },
-    sentry: {
-      disableProfiling: true,
-    },
-  },
 };

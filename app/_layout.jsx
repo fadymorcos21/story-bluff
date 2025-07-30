@@ -1,5 +1,5 @@
 // app/_layout.jsx
-import "./sentrySetup";
+// import "./sentrySetup";
 import { Slot } from "expo-router";
 
 export default function Layout() {
