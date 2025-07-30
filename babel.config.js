@@ -13,7 +13,6 @@ module.exports = function (api) {
           path: ".env",
         },
       ],
-      require.resolve("expo-router/babel"),
       "react-native-reanimated/plugin",
     ],
   };
