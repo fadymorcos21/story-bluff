@@ -26,7 +26,7 @@ export default {
   ios: {
     supportsTablet: false,
     bundleIdentifier: "com.fadymorcos21.storybluff",
-    buildNumber: "1.0.21",
+    buildNumber: "1.0.22",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       EXUpdatesAutoSetup: false,
@@ -59,7 +59,7 @@ export default {
     edgeToEdgeEnabled: true,
   },
   plugins: [
-    // "expo-router",
+    "expo-router",
     "sentry-expo",
     // "./plugins/removeDuplicatePrivacyFiles",
   ],
