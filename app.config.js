@@ -29,6 +29,7 @@ export default {
     buildNumber: "1.0.21",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      EXUpdatesAutoSetup: false,
     },
     privacyManifests: {
       NSPrivacyCollectedDataTypes: [],
@@ -58,7 +59,7 @@ export default {
     edgeToEdgeEnabled: true,
   },
   plugins: [
-    "expo-router",
+    // "expo-router",
     "sentry-expo",
     // "./plugins/removeDuplicatePrivacyFiles",
   ],
