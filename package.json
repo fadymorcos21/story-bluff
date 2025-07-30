@@ -1,8 +1,8 @@
 {
   "name": "story-bluff",
   "version": "1.0.0",
-  "main": "node_modules/expo/AppEntry.js",
-
+  "main": "app/entry.sentry.js",
+  
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
