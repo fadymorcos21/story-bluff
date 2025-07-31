@@ -1,7 +1,7 @@
 {
   "name": "story-bluff",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+"main": "App.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -17,7 +17,7 @@
     "expo-dev-client": "~5.2.4",
     "expo-linear-gradient": "~14.1.5",
     "expo-linking": "~7.1.5",
-    "expo-router": "~3.4.0",
+"expo-router": "~5.1.4",
     "expo-status-bar": "~2.2.3",
     "nanoid": "^5.1.5",
     "nativewind": "^4.1.23",
