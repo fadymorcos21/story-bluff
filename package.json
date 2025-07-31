@@ -1,7 +1,7 @@
 {
   "name": "story-bluff",
   "version": "1.0.0",
-"main": "expo-router/entry",
+  "main": "App.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",

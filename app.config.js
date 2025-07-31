@@ -26,7 +26,7 @@ export default {
   ios: {
     supportsTablet: false,
     bundleIdentifier: "com.fadymorcos21.storybluff",
-    buildNumber: "1.0.28",
+    buildNumber: "1.0.29",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       EXUpdatesAutoSetup: false,
