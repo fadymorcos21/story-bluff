@@ -1,5 +1,7 @@
 // app/_layout.jsx
-// import "./sentrySetup";
+import "react-native-reanimated"; // FIRST import, before anything
+import "./sentrySetup";
+
 import { Slot } from "expo-router";
 
 export default function Layout() {

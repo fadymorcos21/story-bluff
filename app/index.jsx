@@ -1,5 +1,6 @@
 // app/index.jsx
 import { View, Text } from "react-native";
+import "react-native-reanimated"; // FIRST import, before anything
 
 export default function Index() {
   return (
