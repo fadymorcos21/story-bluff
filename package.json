@@ -34,7 +34,8 @@
     "sentry-expo": "~7.0.0",
     "socket.io-client": "^4.8.1",
     "tslib": "^2.6.2",
-    "uninstall": "^0.0.0"
+    "uninstall": "^0.0.0",
+    "@react-native-masked-view/masked-view": "0.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
