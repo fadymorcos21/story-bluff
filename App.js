@@ -1,17 +1,23 @@
-import "react-native-reanimated"; // ✅ MUST be first
+import "react-native-reanimated"; // still first!
+import { useState } from "react";
+import { View, Text, Button } from "react-native";
 import { registerRootComponent } from "expo";
 
-import { View, Text } from "react-native";
+// 👇 Preload the router statically
+import Router from "./app/router";
 
-// Quick loading screen while we register the real app
-const App = () => (
-  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-    <Text>Booting...</Text>
-  </View>
-);
+function App() {
+  const [showRouter, setShowRouter] = useState(false);
 
-// ✅ Register a shell, then hand off to Router after a short delay
+  return showRouter ? (
+    <Router />
+  ) : (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text>Manual App Entry — No Router Yet</Text>
+      <Button title="Enter Router" onPress={() => setShowRouter(true)} />
+    </View>
+  );
+}
+
 registerRootComponent(App);
-setTimeout(() => {
-  require("expo-router/entry");
-}, 1000); // you can increase if needed
+export default App;
