@@ -66,7 +66,7 @@ export default function GameLobby() {
     setPickerVisible(true);
     slideAnim.setValue(screenHeight * 0.8); // start off‐screen
     Animated.timing(slideAnim, {
-      toValue: 0, // slide to bottom‐aligned 0
+      toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
