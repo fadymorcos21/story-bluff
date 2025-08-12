@@ -1,0 +1,16 @@
+{
+  "cli": { "version": ">= 3.0.0", "appVersionSource": "local" },
+  "build": {
+    "production": {
+      "developmentClient": false,
+      "distribution": "store",
+      "ios": { "resourceClass": "m1-medium" },
+          "env": {
+        "BACKEND_URL": "https://resistnce-game-srver-app.store",
+        "TEST_MODE": "FALSE"
+      }
+    }
+
+  },
+  "submit": { "production": {} }
+}

@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "story-bluff",
+    "slug": "story-bluff",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "storybluff",
+    "owner": "fadymorcos21",
+    "ios": {
+      "bundleIdentifier": "com.fadymorcos21.storybluff",
+      "buildNumber": "1.0.43",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-router",
+      "sentry-expo"
+    ],
+
+    "extra": {
+      "eas": {
+        "projectId": "ca83fc9f-4f5a-4bda-ad14-43db8467352b"
+      }
+    }
+  }
+}
