@@ -10,7 +10,7 @@
     "owner": "fadymorcos21",
     "ios": {
       "bundleIdentifier": "com.fadymorcos21.storybluff",
-      "buildNumber": "1.0.43",
+      "buildNumber": "1.0.44",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false

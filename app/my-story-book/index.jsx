@@ -94,76 +94,82 @@ export default function MyStoryBook() {
   };
 
   return (
-    <LinearGradient colors={["#1a002f", "#2f004f"]} style={styles.container}>
-      {/* Header with back button */}
-      <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back-outline" size={24} color="#FFD700" />
-        </Pressable>
-        <Text style={styles.header}>My Story Book</Text>
-      </View>
-
-      <FlatList
-        data={stories}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={stories.length ? null : styles.emptyContainer}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            You haven’t saved any stories yet.
-          </Text>
-        }
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={["#1a002f", "#2f004f"]}
+        style={StyleSheet.absoluteFill}
       />
+      <View style={styles.container}>
+        {/* Header with back button */}
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back-outline" size={24} color="#FFD700" />
+          </Pressable>
+          <Text style={styles.header}>My Story Book</Text>
+        </View>
 
-      {/* Floating Add Button */}
-      <Pressable onPress={addStory} style={styles.fab}>
-        <LinearGradient
-          colors={["#FF0080", "#FF8C00"]}
-          style={styles.fabGradient}
-        >
-          <Ionicons name="add" size={32} color="#fff" />
-        </LinearGradient>
-      </Pressable>
-
-      {/* Modal Editor */}
-      <Modal visible={!!editing} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {editing?.name ? "Edit Story" : "New Story"}
+        <FlatList
+          data={stories}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={stories.length ? null : styles.emptyContainer}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              You haven’t saved any stories yet.
             </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Title (optional)"
-              placeholderTextColor="#bbb"
-              value={draftName}
-              onChangeText={setDraftName}
-            />
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Write your story..."
-              placeholderTextColor="#bbb"
-              value={draftText}
-              onChangeText={setDraftText}
-              multiline
-            />
-            <View style={styles.modalActions}>
-              <Pressable onPress={closeModal} style={styles.cancelBtn}>
-                <Text style={styles.cancelText}>Cancel</Text>
-              </Pressable>
-              <Pressable onPress={saveStory} style={styles.saveBtn}>
-                <LinearGradient
-                  colors={["#00E5FF", "#007AFF"]}
-                  style={styles.saveGradient}
-                >
-                  <Text style={styles.saveText}>Save</Text>
-                </LinearGradient>
-              </Pressable>
+          }
+        />
+
+        {/* Floating Add Button */}
+        <Pressable onPress={addStory} style={styles.fab}>
+          <LinearGradient
+            colors={["#FF0080", "#FF8C00"]}
+            style={styles.fabGradient}
+          >
+            <Ionicons name="add" size={32} color="#fff" />
+          </LinearGradient>
+        </Pressable>
+
+        {/* Modal Editor */}
+        <Modal visible={!!editing} transparent animationType="fade">
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>
+                {editing?.name ? "Edit Story" : "New Story"}
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Title (optional)"
+                placeholderTextColor="#bbb"
+                value={draftName}
+                onChangeText={setDraftName}
+              />
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Write your story..."
+                placeholderTextColor="#bbb"
+                value={draftText}
+                onChangeText={setDraftText}
+                multiline
+              />
+              <View style={styles.modalActions}>
+                <Pressable onPress={closeModal} style={styles.cancelBtn}>
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable onPress={saveStory} style={styles.saveBtn}>
+                  <LinearGradient
+                    colors={["#00E5FF", "#007AFF"]}
+                    style={styles.saveGradient}
+                  >
+                    <Text style={styles.saveText}>Save</Text>
+                  </LinearGradient>
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </LinearGradient>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -172,6 +178,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  safeArea: { flex: 1, backgroundColor: "transparent" },
+
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
