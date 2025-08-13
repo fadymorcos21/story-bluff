@@ -38,7 +38,7 @@ export default function RevealView() {
         }
         return c - 1;
       });
-    }, 1000);
+    }, 10500);
     return () => clearInterval(timer);
   }, []);
 
