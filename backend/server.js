@@ -32,6 +32,58 @@ subscriber
   .then(() => subscriber.subscribe("__keyevent@0__:expired"))
   .catch(console.error);
 
+async function finalizeVotingIfDone(pin) {
+  // Only relevant during VOTE phase
+  const phase = await redis.get(`game:${pin}:phase`);
+  if (phase !== "VOTE") return;
+
+  // Use current round in the lock key so concurrent rounds don’t collide
+  const round = Number(await redis.get(`game:${pin}:currentRound`)) || 1;
+  const lockKey = `lock:game:${pin}:vote:${round}:finalize`;
+
+  let lock;
+  try {
+    lock = await redlock.lock(lockKey, 5_000);
+  } catch {
+    // Someone else is finalizing or just finalized
+    return;
+  }
+
+  try {
+    // Re-read inside the lock to avoid TOCTOU races
+    const [authorId, live, votes] = await Promise.all([
+      redis.get(`game:${pin}:currentAuthor`),
+      redis.hkeys(`game:${pin}:players`),
+      redis.hgetall(`game:${pin}:votes`),
+    ]);
+
+    // All *current live* non-authors must have a vote
+    const voterIds = live.filter((id) => id !== authorId);
+    const allVoted = voterIds.every((id) => votes[id]);
+    if (!allVoted) return;
+
+    // Tally (same logic you already use)
+    for (const voter of voterIds) {
+      if (votes[voter] === authorId) {
+        await redis.hincrby(`game:${pin}:scores`, voter, 2);
+      }
+    }
+    const wrongCount =
+      voterIds.length - voterIds.filter((v) => votes[v] === authorId).length;
+    if (wrongCount > 0) {
+      await redis.hincrby(`game:${pin}:scores`, authorId, wrongCount);
+    }
+
+    await redis.set(`game:${pin}:phase`, "REVEAL");
+    const finalScores = await redis.hgetall(`game:${pin}:scores`);
+    io.to(pin).emit("voteResult", { votes, scores: finalScores });
+  } finally {
+    try {
+      await lock.unlock();
+    } catch {}
+  }
+}
+
 subscriber.on("message", async (_chan, expiredKey) => {
   // only handle our disconnect‐TTL keys:
   const m = expiredKey.match(/^game:(.+):dc:(.+)$/);
@@ -77,10 +129,11 @@ subscriber.on("message", async (_chan, expiredKey) => {
     };
   });
   io.to(pin).emit("playersUpdate", updatedList);
+  await finalizeVotingIfDone(pin);
 });
 
 // Helpers
-function makePin(length = 6) {
+function makePin(length = 1) {
   return [...Array(length)]
     .map(() => Math.random().toString(36)[2])
     .join("")
@@ -109,6 +162,9 @@ app.post("/create", async (req, res) => {
 
   console.log(`Game ${pin} created`);
   res.json({ pin });
+  console.log("Setting phase: LOBBY !!!!!!!!!");
+
+  await redis.set(`game:${pin}:phase`, "LOBBY");
 });
 
 app.get("/health", (_, res) => res.send("OK"));
@@ -153,7 +209,9 @@ io.on("connection", (socket) => {
     }
 
     console.log(
-      `${wasInitial ? "RE" : ""}JOINING: -- ${username} with userID ${userId}to game ${gameCode}`
+      `${
+        wasInitial ? "RE" : ""
+      }JOINING: -- ${username} with userID ${userId}to game ${gameCode}`
     );
 
     // 2. Assign host if none, using userId as host identifier
@@ -206,7 +264,9 @@ io.on("connection", (socket) => {
         playerList
           .map(
             (p, i) =>
-              `${i + 1}. ${p.username} (id: ${p.id}, host: ${p.isHost}, ready: ${p.ready}, connected: ${p.isConnected})`
+              `${i + 1}. ${p.username} (id: ${p.id}, host: ${
+                p.isHost
+              }, ready: ${p.ready}, connected: ${p.isConnected})`
           )
           .join("\n")
     );
@@ -221,6 +281,7 @@ io.on("connection", (socket) => {
       scoresRaw,
       initialRaw,
       rawStoryList,
+      phaseValue,
     ] = await Promise.all([
       redis.exists(`game:${gameCode}:storyList`),
       redis.get(`game:${gameCode}:currentRound`),
@@ -229,6 +290,7 @@ io.on("connection", (socket) => {
       redis.hgetall(`game:${gameCode}:scores`),
       redis.hgetall(`game:${gameCode}:initialPlayers`),
       redis.get(`game:${gameCode}:storyList`),
+      redis.get(`game:${gameCode}:phase`),
     ]);
 
     // parse out the current story text if the game’s started
@@ -249,11 +311,11 @@ io.on("connection", (socket) => {
       return { id, ...p };
     });
 
-    console.log("SYNCING STATE");
+    console.log("SYNCING STATE ", phaseValue);
     socket.emit("syncState", {
       players: playerList,
       initialPlayers: initialPlayers || [],
-      phase: hasStarted ? "ROUND" : "LOBBY",
+      phase: phaseValue,
       round: roundRaw ? Number(roundRaw) : 0,
       authorId,
       story: storyText,
@@ -393,6 +455,10 @@ io.on("connection", (socket) => {
     // Emit the first round using allStories[1]
     const { authorId, text } = allStories[1];
     await redis.set(`game:${pin}:currentAuthor`, authorId);
+    console.log("Setting phase: ROUND !!!!!!!!!");
+
+    await redis.set(`game:${pin}:phase`, "ROUND");
+
     io.to(pin).emit("gameStarted", {
       round: 1,
       authorId,
@@ -403,7 +469,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("nextRound", async ({ pin, roundKey }) => {
-    const current = Number(await redis.get(`game:${pin}:currentRound`)) || 1;
+    // const current = Number(await redis.get(`game:${pin}:currentRound`)) || 1;
     const lockKey = `lock:game:${pin}:advance:${roundKey}`;
 
     console.log("KEY: ", roundKey);
@@ -416,9 +482,10 @@ io.on("connection", (socket) => {
     }
 
     const list = JSON.parse(await redis.get(`game:${pin}:storyList`));
-    const next = current + 1;
+    const next = roundKey + 1;
 
     if (next >= list.length) {
+      await redis.set(`game:${pin}:phase`, "FINAL");
       await lock.unlock();
       return io.to(pin).emit("gameEnded");
     }
@@ -434,6 +501,9 @@ io.on("connection", (socket) => {
 
     // release the lock so others can advance
     await lock.unlock();
+    console.log("Setting phase: ROUND !!!!!!!!!");
+
+    await redis.set(`game:${pin}:phase`, "ROUND");
   });
 
   // socket.on("nextRound", async (pin) => {
@@ -493,7 +563,8 @@ io.on("connection", (socket) => {
         `game:${pin}:currentAuthor`,
         `game:${pin}:inProgress`,
         `game:${pin}:initialPlayers`
-      );
+      )
+      .set(`game:${pin}:phase`, "LOBBY");
 
     // 3) clear any per‐user disconnect TTL keys: game:<pin>:dc:<userId>
     const dcKeys = await redis.keys(`game:${pin}:dc:*`);
@@ -514,11 +585,17 @@ io.on("connection", (socket) => {
     await io.in(pin).socketsLeave(pin);
   });
 
+  socket.on("startVote", async (pin) => {
+    await redis.set(`game:${pin}:phase`, "VOTE");
+    io.to(pin).emit("startVote");
+  });
+
   socket.on("vote", async ({ pin, choiceId }) => {
     await redis.hset(`game:${pin}:votes`, socket.data.userId, choiceId);
     const votes = await redis.hgetall(`game:${pin}:votes`);
     io.to(pin).emit("votesUpdate", votes);
 
+    // Can replace code below here with finalizeVotingIfDone function
     // Determine if all non-authors have voted
     const authorId = await redis.get(`game:${pin}:currentAuthor`);
     const live = await redis.hkeys(`game:${pin}:players`);
@@ -539,6 +616,9 @@ io.on("connection", (socket) => {
       if (wrongCount > 0) {
         await redis.hincrby(`game:${pin}:scores`, authorId, wrongCount);
       }
+      console.log("Setting phase: REVEAL !!!!!!!!!");
+
+      await redis.set(`game:${pin}:phase`, "REVEAL");
       const finalScores = await redis.hgetall(`game:${pin}:scores`);
       io.to(pin).emit("voteResult", { votes, scores: finalScores });
     }
