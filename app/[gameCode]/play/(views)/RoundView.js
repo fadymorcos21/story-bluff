@@ -3,12 +3,16 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated, Dimensions } from "react-native";
 import { useGame } from "../../../../context/GameContext";
+import { useLocalSearchParams } from "expo-router";
+
 // good
 
 export default function RoundView() {
   // Testing
 
-  const { state, dispatch } = useGame();
+  const { state, socket, dispatch } = useGame();
+  const { gameCode } = useLocalSearchParams();
+
   const { round, story } = state;
   const progress = useRef(new Animated.Value(0)).current;
   const fullWidth = Dimensions.get("window").width - 40;
@@ -41,14 +45,15 @@ export default function RoundView() {
 
     Animated.timing(progress, {
       toValue: 1,
-      duration: 20000,
+      duration: 2000,
       useNativeDriver: false,
     }).start();
 
     // Schedule vote transition separately
     timeout = setTimeout(() => {
+      socket.emit("startVote", gameCode);
       dispatch({ type: "START_VOTE" });
-    }, 20000);
+    }, 2000);
 
     return () => {
       clearTimeout(timeout);

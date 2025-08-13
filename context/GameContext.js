@@ -160,6 +160,10 @@ export function GameProvider({ children }) {
         dispatch({ type: "VOTE_RESULT", votes, scores })
       );
 
+      s.on("startVote", () => {
+        dispatch({ type: "START_VOTE" }); // update phase to VOTE
+      });
+
       s.on("errorMessage", (msg) => {
         alert(msg);
         router.replace("/");
