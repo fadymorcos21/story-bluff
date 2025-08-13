@@ -49,7 +49,8 @@ export default function Home() {
   const [code, setCode] = useState("");
   const [createBtnWidth, setCreateBtnWidth] = useState(null);
   const screenWidth = Dimensions.get("window").width - 32; // ~ px-4 on each side
-  const collapsedWidth = (screenWidth * 7) / 20;
+  const collapsedWidth =
+    screenWidth < 708 ? (screenWidth * 7) / 20 : (screenWidth * 2) / 20;
 
   const handleCreatePress = async () => {
     if (!username.trim()) {
@@ -292,7 +293,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   createBtnContainer: {
-    alignSelf: "stretch",
+    alignSelf: "center",
+    width: "100%",
     maxWidth: MAX_W_MD,
     backgroundColor: "#3B82F6", // blue-500
     paddingVertical: 16, // py-4
