@@ -7,12 +7,15 @@ import {
   Text,
   Image,
   TextInput,
+  ScrollView,
   TouchableOpacity,
+  Pressable,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
   Animated,
+  Modal,
   Dimensions,
   StyleSheet,
   Alert,
@@ -33,6 +36,7 @@ export default function Home() {
   const router = useRouter();
 
   const [username, setUsername] = useState("");
+  const [isHowToPlayVisible, setHowToPlayVisible] = useState(false); // NEW
 
   // load saved username on mount
   useEffect(() => {
@@ -123,6 +127,111 @@ export default function Home() {
         end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
+
+      {/* How to Play Modal */}
+      <Modal
+        visible={isHowToPlayVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setHowToPlayVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          {/* Backdrop: tap to close */}
+          <Pressable
+            onPress={() => setHowToPlayVisible(false)}
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+            }}
+          />
+
+          {/* Card: taps inside do NOT close */}
+          <Pressable
+            onPress={() => {}}
+            style={{ width: "100%", maxWidth: 400 }}
+          >
+            <View
+              style={{ backgroundColor: "#fff", borderRadius: 12, padding: 20 }}
+            >
+              <Text
+                style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16 }}
+              >
+                How to Play
+              </Text>
+
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", marginBottom: 8 }}
+              >
+                Goal
+              </Text>
+              <Text style={{ fontSize: 16, lineHeight: 24, marginBottom: 20 }}>
+                Don't give it away when it’s your story. Guess who it happened
+                to when it isn’t. Score points by guessing correctly—or by
+                deceiving others.
+              </Text>
+
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", marginBottom: 8 }}
+              >
+                Setup
+              </Text>
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ fontSize: 16, lineHeight: 26 }}>
+                  • Set your username and join a game.
+                </Text>
+                <Text style={{ fontSize: 16, lineHeight: 26 }}>
+                  • Add <Text style={{ fontWeight: "600" }}>3–5</Text> short
+                  stories from your life.
+                </Text>
+                <Text style={{ fontSize: 16, lineHeight: 26 }}>
+                  • Could be an{" "}
+                  <Text style={{ fontWeight: "600" }}>experience</Text> or
+                  something interesting that has happened to you (1–3
+                  sentences).
+                </Text>
+              </View>
+
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", marginBottom: 8 }}
+              >
+                Round Flow
+              </Text>
+              <View>
+                <Text style={{ fontSize: 16, lineHeight: 26 }}>
+                  • 8 Rounds (default).
+                </Text>
+                <Text style={{ fontSize: 16, lineHeight: 26 }}>
+                  • Every round a random story will appear.
+                </Text>
+                <Text style={{ fontSize: 16, lineHeight: 26 }}>
+                  • Players can discuss to get closer to determining whose story
+                  it is.
+                </Text>
+                <Text style={{ fontSize: 16, lineHeight: 26 }}>
+                  • Reveal the author and tally points.
+                </Text>
+                <Text style={{ fontSize: 16, lineHeight: 26 }}>
+                  • Players are awarded +2 points for guessing correct.
+                </Text>
+                <Text style={{ fontSize: 16, lineHeight: 26 }}>
+                  • The author gets +1 point for every player they deceive.
+                </Text>
+              </View>
+            </View>
+          </Pressable>
+        </View>
+      </Modal>
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.screen}>
@@ -226,27 +335,27 @@ export default function Home() {
           {/* Bottom icon buttons */}
           <View style={styles.bottomBar}>
             <View style={styles.bottomRow}>
+              {/* How to Play button (replaces settings) */}
               <TouchableOpacity
-                onPress={() => Alert.alert("Settings")}
+                onPress={() => setHowToPlayVisible(true)}
                 style={styles.iconBtn}
               >
-                <Ionicons name="settings-outline" size={24} color="#FFF" />
+                <Ionicons name="help-circle-outline" size={24} color="#FFF" />
               </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={() => router.push("/my-story-book")}
                 style={styles.iconBtn}
               >
                 <Ionicons name="book-outline" size={24} color="#FFF" />
               </TouchableOpacity>
+
+              {/* Settings button (replaces game mode) */}
               <TouchableOpacity
-                onPress={() => Alert.alert("Game Mode")}
+                onPress={() => Alert.alert("Settings")}
                 style={styles.iconBtn}
               >
-                <Ionicons
-                  name="game-controller-outline"
-                  size={24}
-                  color="#FFF"
-                />
+                <Ionicons name="settings-outline" size={24} color="#FFF" />
               </TouchableOpacity>
             </View>
           </View>

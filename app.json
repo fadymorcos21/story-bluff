@@ -8,6 +8,11 @@
     "userInterfaceStyle": "light",
     "scheme": "storybluff",
     "owner": "fadymorcos21",
+        "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "icon": "./assets/icon.png",
       "bundleIdentifier": "com.fadymorcos21.storybluff",
