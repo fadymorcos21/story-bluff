@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "story-bluff",
+    "name": "Story Bluff",
     "slug": "story-bluff",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,8 +9,9 @@
     "scheme": "storybluff",
     "owner": "fadymorcos21",
     "ios": {
+      "icon": "./assets/icon.png",
       "bundleIdentifier": "com.fadymorcos21.storybluff",
-      "buildNumber": "1.0.44",
+      "buildNumber": "1.1.0",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false

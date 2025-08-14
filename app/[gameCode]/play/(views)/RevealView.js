@@ -26,7 +26,7 @@ export default function RevealView() {
     players.find((p) => p.id === authorId)?.username.toUpperCase() || "";
 
   // Countdown logic
-  const [countdown, setCountdown] = useState(2);
+  const [countdown, setCountdown] = useState(10);
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((c) => {
@@ -38,7 +38,7 @@ export default function RevealView() {
         }
         return c - 1;
       });
-    }, 10500);
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 
