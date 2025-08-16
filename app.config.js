@@ -18,7 +18,7 @@ export default ({ config }) => ({
     ios: {
       icon: "./assets/icon.png",
       bundleIdentifier: "com.fadymorcos21.storybluff",
-      buildNumber: "1.1.1",
+      buildNumber: "1.1.2",
       supportsTablet: false,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
