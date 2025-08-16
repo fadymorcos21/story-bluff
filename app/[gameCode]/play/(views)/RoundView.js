@@ -94,7 +94,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#1a0041",
     alignItems: "center",
   },
   roundText: {
@@ -121,8 +120,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 40,
     paddingHorizontal: 16,
-    marginTop: 24,
+    minHeight: "28%",
+    marginTop: 36,
     alignItems: "center",
+    justifyContent: "center",
     position: "relative",
   },
   tag: {

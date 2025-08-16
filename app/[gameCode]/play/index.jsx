@@ -1,13 +1,24 @@
 // app/[gameCode]/play/index.jsx
 import { useGame } from "../../../context/GameContext";
-import { Text } from "react-native";
-
+import {
+  SafeAreaView,
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  Modal,
+  TextInput,
+  Animated,
+  Dimensions,
+  StyleSheet,
+} from "react-native";
 import RevealView from "./(views)/RevealView";
 import RoundView from "./(views)/RoundView";
 import VoteView from "./(views)/VoteView";
 import FinalView from "./(views)/FinalView";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function Play() {
   const { state, user, gameCode } = useGame();
@@ -27,16 +38,35 @@ export default function Play() {
     }
   }, [mounted, state.phase, gameCode, user]);
 
-  switch (state.phase) {
-    case "ROUND":
-      return <RoundView />;
-    case "VOTE":
-      return <VoteView />;
-    case "REVEAL":
-      return <RevealView />;
-    case "FINAL":
-      return <FinalView />;
-    default:
-      return <Text style={{ color: "red" }}>The White Screen Error</Text>;
-  }
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={["#1a0041", "#4c005c"]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      {(() => {
+        switch (state.phase) {
+          case "ROUND":
+            return <RoundView />;
+          case "VOTE":
+            return <VoteView />;
+          case "REVEAL":
+            return <RevealView />;
+          case "FINAL":
+            return <FinalView />;
+          default:
+            return <Text style={{ color: "red" }}>The White Screen Error</Text>;
+        }
+      })()}
+    </SafeAreaView>
+  );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+});

@@ -112,7 +112,9 @@ export default function VoteView() {
 
             <Text style={styles.youAre}>
               {selected
-                ? `You ${!hasVoted ? "are voting" : "have voted"} ${players.find((p) => p.id === selected)?.username}`
+                ? `You ${!hasVoted ? "are voting" : "have voted"} ${
+                    players.find((p) => p.id === selected)?.username
+                  }`
                 : ""}
             </Text>
 
@@ -195,7 +197,6 @@ const CARD_PADDING = 20;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#1a0041",
     // justifyContent: "space-around",
     alignItems: "center",
     padding: 20,

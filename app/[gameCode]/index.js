@@ -113,21 +113,51 @@ export default function GameLobby() {
       setStories((prev) => prev.slice(0, prev.length - 1));
   };
 
+  // helper near the top (outside the component or above submitStories)
+  const normalizeStory = (s = "") =>
+    s.toLowerCase().replace(/\s+/g, " ").trim();
+
+  // inside GameLobby
   const submitStories = async () => {
     if (!socket) return Alert.alert("Error", "Not connected");
     socket.emit("submitStories", { pin: gameCode, stories });
+
     try {
       const raw = await AsyncStorage.getItem(BOOK_KEY);
       const existing = raw ? JSON.parse(raw) : [];
-      const newEntries = stories.map((t, i) => ({
-        id: `${gameCode}-${user}-${Date.now()}-${i}`,
-        name: "",
-        text: t,
-      }));
-      await AsyncStorage.setItem(
-        BOOK_KEY,
-        JSON.stringify([...newEntries, ...existing])
+
+      // Build a set of normalized existing texts for O(1) duplicate checks
+      const existingNorm = new Set(
+        existing.map((e) => normalizeStory(e.text)).filter(Boolean)
       );
+
+      const batchSeen = new Set(); // de-dupe within the current submission
+      const uniqueNew = [];
+
+      stories.forEach((t, i) => {
+        const norm = normalizeStory(t);
+        if (!norm) return; // skip blanks
+        if (existingNorm.has(norm)) return; // already saved before
+        if (batchSeen.has(norm)) return; // repeated in this batch
+
+        uniqueNew.push({
+          id: `${gameCode}-${user}-${Date.now()}-${i}`,
+          name: "",
+          text: t, // keep original text as-typed
+        });
+        batchSeen.add(norm);
+      });
+
+      if (uniqueNew.length > 0) {
+        await AsyncStorage.setItem(
+          BOOK_KEY,
+          JSON.stringify([...uniqueNew, ...existing])
+        );
+      } else {
+        // Optional: give feedback if every story was a duplicate
+        console.log("No new stories to cache (all duplicates).");
+        // Alert.alert("Nothing new", "All of your stories are already in My Story Book.");
+      }
     } catch (e) {
       console.error("Failed to cache stories:", e);
     }
