@@ -45,7 +45,7 @@ export default function RoundView() {
 
     Animated.timing(progress, {
       toValue: 1,
-      duration: 18000,
+      duration: 20000,
       useNativeDriver: false,
     }).start();
 
@@ -53,7 +53,7 @@ export default function RoundView() {
     timeout = setTimeout(() => {
       socket.emit("startVote", gameCode);
       dispatch({ type: "START_VOTE" });
-    }, 18000);
+    }, 20000);
 
     return () => {
       clearTimeout(timeout);

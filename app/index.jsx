@@ -26,11 +26,9 @@ import { useRouter } from "expo-router";
 import { connectSocket } from "../services/socket";
 import { Ionicons } from "@expo/vector-icons";
 
-const BACKEND_URL =
-  Constants?.expoConfig?.extra?.BACKEND_URL ??
-  Constants?.manifest?.extra?.BACKEND_URL ??
-  "https://resistnce-game-srver-app.store"; // fallback if undefined
-console.log(BACKEND_URL);
+const BACKEND_URL = Constants.expoConfig.extra.BACKEND_URL;
+
+console.log("Backend URL:", BACKEND_URL);
 
 export default function Home() {
   const router = useRouter();
@@ -63,6 +61,13 @@ export default function Home() {
     try {
       await AsyncStorage.setItem("username", username);
       const res = await fetch(`${BACKEND_URL}/create`, { method: "POST" });
+      if (!res.ok) {
+        // server responded but with error (e.g., 502)
+        return Alert.alert(
+          "Server Error",
+          "We are facing some technical difficulties. Please try again later."
+        );
+      }
       const { pin } = await res.json();
 
       const existingUserId = await AsyncStorage.getItem("userId");
@@ -351,12 +356,12 @@ export default function Home() {
               </TouchableOpacity>
 
               {/* Settings button (replaces game mode) */}
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 onPress={() => Alert.alert("Settings")}
                 style={styles.iconBtn}
               >
                 <Ionicons name="settings-outline" size={24} color="#FFF" />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
         </View>
