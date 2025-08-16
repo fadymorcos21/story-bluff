@@ -18,6 +18,7 @@ import {
   Modal,
   Dimensions,
   StyleSheet,
+  Linking,
   Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -35,6 +36,7 @@ export default function Home() {
 
   const [username, setUsername] = useState("");
   const [isHowToPlayVisible, setHowToPlayVisible] = useState(false); // NEW
+  const [isSettingsVisible, setSettingsVisible] = useState(false);
 
   // load saved username on mount
   useEffect(() => {
@@ -196,6 +198,9 @@ export default function Home() {
                   • Set your username and join a game.
                 </Text>
                 <Text style={{ fontSize: 16, lineHeight: 26 }}>
+                  • 3 - 10 players.
+                </Text>
+                <Text style={{ fontSize: 16, lineHeight: 26 }}>
                   • Add <Text style={{ fontWeight: "600" }}>3–5</Text> short
                   stories from your life.
                 </Text>
@@ -236,6 +241,69 @@ export default function Home() {
             </View>
           </Pressable>
         </View>
+      </Modal>
+
+      <Modal
+        visible={isSettingsVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSettingsVisible(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+          }}
+          onPress={() => setSettingsVisible(false)} // tap outside to close
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderTopLeftRadius: 16,
+              borderTopRightRadius: 16,
+              paddingBottom: 24,
+            }}
+          >
+            <TouchableOpacity
+              style={{ padding: 16 }}
+              onPress={() => router.push("https://storybluff.app/rules")}
+            >
+              <Text style={{ fontSize: 18 }}>Terms of Use</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{ padding: 16 }}
+              onPress={() => router.push("https://storybluff.app/privacy")}
+            >
+              <Text style={{ fontSize: 18 }}>Privacy Policy</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{ padding: 16 }}
+              onPress={() =>
+                Linking.openURL(
+                  "mailto:fadymorcos22@gmail.com?subject=Report Content"
+                )
+              }
+            >
+              <Text style={{ fontSize: 18 }}>Report Content</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{ padding: 16 }}
+              onPress={() => Linking.openURL("mailto:fadymorcos22@gmail.com")}
+            >
+              <Text style={{ fontSize: 18 }}>Contact Support</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{ padding: 16, alignItems: "center" }}
+              onPress={() => setSettingsVisible(false)}
+            >
+              <Text style={{ fontSize: 18, color: "red" }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
       </Modal>
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -356,12 +424,12 @@ export default function Home() {
               </TouchableOpacity>
 
               {/* Settings button (replaces game mode) */}
-              {/* <TouchableOpacity
-                onPress={() => Alert.alert("Settings")}
+              <TouchableOpacity
+                onPress={() => setSettingsVisible(true)}
                 style={styles.iconBtn}
               >
                 <Ionicons name="settings-outline" size={24} color="#FFF" />
-              </TouchableOpacity> */}
+              </TouchableOpacity>
             </View>
           </View>
         </View>

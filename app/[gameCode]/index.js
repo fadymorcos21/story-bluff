@@ -285,7 +285,7 @@ export default function GameLobby() {
               {amHost
                 ? allReady
                   ? "All set! Start the game."
-                  : "Waiting for players…"
+                  : "Waiting for at least 3 players…"
                 : "Waiting for host…"}
             </Text>
             {amHost && allReady && (
