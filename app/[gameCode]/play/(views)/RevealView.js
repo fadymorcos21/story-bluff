@@ -46,7 +46,12 @@ export default function RevealView() {
   const sorted = [...players].sort(
     (a, b) => (scores[b.id] || 0) - (scores[a.id] || 0)
   );
-
+  function truncateWithEllipsis(str, maxLength = 376) {
+    if (str.length > maxLength) {
+      return str.slice(0, maxLength) + "...";
+    }
+    return str;
+  }
   return (
     <SafeAreaView style={styles.screen}>
       {/* Header */}
@@ -59,7 +64,7 @@ export default function RevealView() {
         <View style={styles.tag}>
           <Text style={styles.tagText}>STORY</Text>
         </View>
-        <Text style={styles.storyText}>{story}</Text>
+        <Text style={styles.storyText}>{truncateWithEllipsis(story)}</Text>
       </View>
 
       {/* Countdown */}

@@ -1,7 +1,14 @@
 // app/[gameCode]/play/views/RoundView.js
 
 import React, { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  Dimensions,
+  ScrollView,
+} from "react-native";
 import { useGame } from "../../../../context/GameContext";
 import { useLocalSearchParams } from "expo-router";
 
@@ -15,7 +22,11 @@ export default function RoundView() {
 
   const { round, story } = state;
   const progress = useRef(new Animated.Value(0)).current;
-  const fullWidth = Dimensions.get("window").width - 40;
+
+  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+  const fullWidth = screenWidth - 40;
+  // Keeps the card from growing too tall; long stories scroll inside
+  const cardMaxHeight = Math.min(screenHeight * 0.55, 520);
 
   const messages = [
     "Could *you* keep a straight face?",
@@ -74,11 +85,17 @@ export default function RoundView() {
         <Animated.View style={[styles.barFill, { width: barWidth }]} />
       </View>
 
-      <View style={styles.card}>
+      <View style={[styles.card, { maxHeight: cardMaxHeight }]}>
         <View style={styles.tag}>
           <Text style={styles.tagText}>STORY</Text>
         </View>
-        <Text style={styles.storyText}>{story}</Text>
+        <ScrollView
+          style={styles.storyScroll}
+          contentContainerStyle={styles.storyScrollContent}
+          showsVerticalScrollIndicator
+        >
+          <Text style={styles.storyText}>{story}</Text>
+        </ScrollView>
       </View>
 
       <View style={styles.subtitle}>
@@ -125,6 +142,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+  },
+  storyScroll: {
+    width: "100%",
+  },
+  storyScrollContent: {
+    paddingHorizontal: 4,
   },
   tag: {
     position: "absolute",

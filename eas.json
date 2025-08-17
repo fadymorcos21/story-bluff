@@ -1,6 +1,12 @@
 {
   "cli": { "version": ">= 3.0.0", "appVersionSource": "local" },
   "build": {
+        "simulator": {
+      "extends": "production",
+      "ios": {
+        "simulator": true
+      }
+    },
         "development": {
       "developmentClient": true,
       "distribution": "internal",
@@ -14,7 +20,7 @@
         "BACKEND_URL": "https://resistnce-game-srver-app.store"
       }
     },
-    
+
     "production": {
       "developmentClient": false,
       "distribution": "store",

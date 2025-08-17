@@ -43,11 +43,7 @@ export default function GameLobby() {
   const allReady =
     players.length >= MIN_STORIES && players.every((p) => p.ready);
 
-  // const [stories, setStories] = useState(Array(MIN_STORIES).fill(""));
-  const [stories, setStories] = useState(() => {
-    if (true) return Array(MIN_STORIES).fill(`${user} `.repeat(4));
-    return Array(MIN_STORIES).fill("");
-  });
+  const [stories, setStories] = useState(Array(MIN_STORIES).fill(""));
 
   const [editingIndex, setEditingIndex] = useState(null);
   const [draftText, setDraftText] = useState("");
@@ -464,6 +460,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 20,
+    bottom: 30,
   },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 12 },
   modalInput: {
