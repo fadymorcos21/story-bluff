@@ -1,4 +1,6 @@
+// © 2025 Fady Morcos. All rights reserved.
 // app/[gameCode]/index.js
+
 import { useEffect, useState, useRef } from "react";
 import {
   SafeAreaView,
@@ -43,8 +45,12 @@ export default function GameLobby() {
   const allReady =
     players.length >= MIN_STORIES && players.every((p) => p.ready);
 
-  const [stories, setStories] = useState(Array(MIN_STORIES).fill(""));
+  // const [stories, setStories] = useState(Array(MIN_STORIES).fill(""));
 
+  const [stories, setStories] = useState(() => {
+    if (true) return Array(MIN_STORIES).fill(`${user} `.repeat(4));
+    return Array(MIN_STORIES).fill("");
+  });
   const [editingIndex, setEditingIndex] = useState(null);
   const [draftText, setDraftText] = useState("");
 
@@ -116,6 +122,13 @@ export default function GameLobby() {
   // inside GameLobby
   const submitStories = async () => {
     if (!socket) return Alert.alert("Error", "Not connected");
+    console.log("stories", stories);
+
+    // block if any slot is exactly "" (blank string)
+    if (stories.some((s) => s === "")) {
+      return Alert.alert("Fill your stories", "One or more stories are blank.");
+    }
+
     socket.emit("submitStories", { pin: gameCode, stories });
 
     try {

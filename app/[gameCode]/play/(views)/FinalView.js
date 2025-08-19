@@ -1,3 +1,4 @@
+// © 2025 Fady Morcos. All rights reserved.
 // app/[gameCode]/play/views/FinalView.js
 import {
   SafeAreaView,

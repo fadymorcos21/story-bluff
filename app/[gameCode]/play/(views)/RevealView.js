@@ -1,3 +1,4 @@
+// © 2025 Fady Morcos. All rights reserved.
 // app/[gameCode]/play/views/RevealView.js
 
 import React, { useEffect, useState, useRef } from "react";

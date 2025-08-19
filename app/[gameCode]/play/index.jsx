@@ -1,3 +1,4 @@
+// © 2025 Fady Morcos. All rights reserved.
 // app/[gameCode]/play/index.jsx
 import { useGame } from "../../../context/GameContext";
 import {

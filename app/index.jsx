@@ -1,3 +1,4 @@
+// © 2025 Fady Morcos. All rights reserved.
 // app/index.jsx
 import Constants from "expo-constants";
 import { useState, useRef, useEffect } from "react";
