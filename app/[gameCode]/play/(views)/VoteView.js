@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Modal,
+  Pressable,
   ScrollView,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
@@ -19,13 +21,20 @@ export default function VoteView() {
   const { initialPlayers: players, votes, story, scores } = state;
   const [selected, setSelected] = useState(null);
   const [hasVoted, setHasVoted] = useState(false);
-  const [showStory, setShowStory] = useState(false);
+
+  const [isStoryVisible, setStoryVisible] = useState(false);
+
   const [showScores, setShowScores] = useState(false);
   const toggleScores = () => setShowScores((prev) => !prev);
 
   const voteOptions = state.initialPlayers.filter((p) => p.id !== userId);
 
   const waitingName = "players";
+
+  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+  const fullWidth = screenWidth - 40;
+  // Keeps the card from growing too tall; long stories scroll inside
+  const cardMaxHeight = screenHeight * 0.55;
 
   const handleSelect = (id) => {
     if (hasVoted) return;
@@ -163,30 +172,73 @@ export default function VoteView() {
         </View>
       )}
 
-      {!showStory ? (
-        <View style={styles.showStoryBtnView}>
-          <TouchableOpacity
-            onPress={() => setShowStory(true)}
-            style={styles.showStory}
+      {/* Show Story button */}
+      <View style={styles.showStoryBtnView}>
+        <TouchableOpacity
+          onPress={() => setStoryVisible(true)}
+          style={styles.showStory}
+        >
+          <Text style={styles.showStoryText}>SHOW STORY</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Story Modal */}
+      <Modal
+        visible={isStoryVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setStoryVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          {/* Backdrop */}
+          <Pressable
+            onPress={() => setStoryVisible(false)}
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+            }}
+          />
+          {/* Card */}
+
+          <View
+            style={{
+              backgroundColor: "#FEFBEA",
+              borderRadius: 16,
+              padding: 20,
+              width: "100%",
+              height: cardMaxHeight, // 🔑 real height
+            }}
           >
-            <Text style={styles.showStoryText}>SHOW STORY</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.storyPanel}>
-          <View style={styles.storyBoard}>
-            <ScrollView contentContainerStyle={styles.storyScroll}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+            >
               <Text style={styles.storyText}>{story}</Text>
             </ScrollView>
+
             <TouchableOpacity
-              onPress={() => setShowStory(false)}
-              style={styles.showStory}
+              onPress={() => setStoryVisible(false)}
+              style={[styles.showStory, { marginTop: 16 }]}
             >
-              <Text style={styles.showStoryText}>Hide</Text>
+              <Text style={styles.showStoryText}>CLOSE</Text>
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -352,7 +404,18 @@ const styles = StyleSheet.create({
     flex: 4,
     padding: 16,
   },
-
+  cardStoryShow: {
+    width: "100%",
+    backgroundColor: "#FEFBEA",
+    borderRadius: 20,
+    paddingVertical: 40,
+    paddingHorizontal: 16,
+    minHeight: "28%",
+    marginTop: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
   storyBoard: {
     padding: 12,
     backgroundColor: "#FEFBEA",
@@ -360,15 +423,18 @@ const styles = StyleSheet.create({
   },
   storyScroll: {
     // center content if short
-    justifyContent: "center",
-    padding: 12,
+    width: "100%",
   },
   storyText: {
     color: "#15264F",
     fontSize: 16,
     lineHeight: 22,
+    textAlign: "center",
   },
   currentUserText: {
     color: "#19bbe3", // light-blue for “you”
+  },
+  storyScrollContent: {
+    paddingHorizontal: 4,
   },
 });

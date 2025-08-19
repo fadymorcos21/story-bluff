@@ -9,6 +9,7 @@ import {
   Dimensions,
   FlatList,
   SafeAreaView,
+  ScrollView,
 } from "react-native";
 import { useGame } from "../../../../context/GameContext";
 import { useLocalSearchParams } from "expo-router";
@@ -16,6 +17,7 @@ export default function RevealView() {
   // Testing
 
   const { state, dispatch, socket } = useGame();
+  console.log(`[PLAY ${state.phase}] srtoreyt`, state.story);
 
   const { gameCode, user } = useLocalSearchParams();
 
@@ -64,7 +66,13 @@ export default function RevealView() {
         <View style={styles.tag}>
           <Text style={styles.tagText}>STORY</Text>
         </View>
-        <Text style={styles.storyText}>{truncateWithEllipsis(story)}</Text>
+        <ScrollView
+          style={{ flex: 1, width: "100%" }}
+          contentContainerStyle={{ paddingVertical: 10 }}
+          showsVerticalScrollIndicator
+        >
+          <Text style={styles.storyText}>{story}</Text>
+        </ScrollView>
       </View>
 
       {/* Countdown */}
@@ -98,8 +106,10 @@ export default function RevealView() {
   );
 }
 
-const { width } = Dimensions.get("window");
-
+// const { width } = Dimensions.get("window");
+const { width: width, height: screenHeight } = Dimensions.get("window");
+// Keeps the card from growing too tall; long stories scroll inside
+const cardMaxHeight = screenHeight * 0.55;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -123,15 +133,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textAlignVertical: "center",
   },
+
   card: {
     flex: 20,
     width: width * 0.88,
     backgroundColor: "#FEFBEA",
     borderRadius: 20,
-    paddingVertical: 40,
+    paddingVertical: 20,
     paddingHorizontal: 16,
-    alignItems: "center",
     position: "relative",
+    alignItems: "center",
+    maxHeight: screenHeight * 0.4,
   },
   countdownContainer: {
     flex: 5,

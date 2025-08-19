@@ -85,7 +85,6 @@ const { width } = Dimensions.get("window");
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#1a0041",
     alignItems: "center",
     padding: 20,
   },

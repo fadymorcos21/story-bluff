@@ -133,7 +133,7 @@ subscriber.on("message", async (_chan, expiredKey) => {
 });
 
 // Helpers
-function makePin(length = 1) {
+function makePin(length = 5) {
   return [...Array(length)]
     .map(() => Math.random().toString(36)[2])
     .join("")
@@ -192,20 +192,54 @@ io.on("connection", (socket) => {
   socket.on("joinGame", async ({ gameCode, username }, cb) => {
     await redis.del(`game:${gameCode}:dc:${socket.handshake.auth.userId}`);
     const { userId } = socket.handshake.auth;
+    console.log("User ID:", userId);
+    console.log("Auth Data:", socket.handshake.auth);
 
     // 1. Validate game existence and status
     const reply = typeof cb === "function" ? cb : () => {};
-    const gameExists = await redis.exists(`game:${gameCode}:host`);
+    console.log("step 1");
+    const gameExists = await redis.exists(
+      `game:${gameCode.toUpperCase()}:host`
+    );
+    console.log("step 2");
+    console.log("FGAME CODE", gameCode);
+
     if (!gameExists) return reply({ ok: false, error: "Game not found" });
+    console.log("step 3: rip?");
+
     const inProgress = await redis.exists(`game:${gameCode}:storyList`);
+    console.log("step 4: idk");
 
     // If game is in progress, allow only known user to rejoin, block new players
     const wasInitial = await redis.hexists(
-      `game:${gameCode}:initialPlayers`,
+      `game:${gameCode.toUpperCase()}:initialPlayers`,
       userId
     );
+
+    console.log("in progress:", inProgress);
+    console.log("wasInitial:", wasInitial);
     if (inProgress && !wasInitial) {
       return reply({ ok: false, error: "Game already in progress" });
+    }
+
+    // Enforce 10 player limit
+    const currentCount = await redis.hlen(`game:${gameCode}:players`);
+
+    console.log(
+      "----------------------------------------------current count: ",
+      currentCount,
+      "------------------------------------------------"
+    );
+    const raw = await redis.hgetall(`game:${gameCode.toUpperCase()}:players`);
+    console.log("raw updated players: ", raw);
+
+    if (!wasInitial && currentCount >= 11) {
+      console.log(`Rejecting join: ${username} (${userId}) as game is full`);
+      // respond via callback if present
+      reply({ ok: false, error: "Game is full (10 players max)" });
+      // also notify socket in case no callback was provided
+      socket.emit("errorMessage", "Game is full (10 players max)");
+      return;
     }
 
     console.log(
@@ -215,18 +249,18 @@ io.on("connection", (socket) => {
     );
 
     // 2. Assign host if none, using userId as host identifier
-    let hostId = await redis.get(`game:${gameCode}:host`);
+    let hostId = await redis.get(`game:${gameCode.toUpperCase()}:host`);
     if (!hostId) {
-      await redis.set(`game:${gameCode}:host`, userId);
+      await redis.set(`game:${gameCode.toUpperCase()}:host`, userId);
       hostId = userId;
     }
 
     // 3. Join socket to the game room and tag it with userId for later use
-    socket.join(gameCode);
+    socket.join(gameCode.toUpperCase());
     socket.data.userId = userId;
 
     // 4. Add or update player info in Redis using userId as the key
-    const playerKey = `game:${gameCode}:players`;
+    const playerKey = `game:${gameCode.toUpperCase()}:players`;
     const existingData = await redis.hget(playerKey, userId);
     if (!existingData) {
       const playerObj = {
@@ -237,7 +271,7 @@ io.on("connection", (socket) => {
       };
       await redis.hset(playerKey, userId, JSON.stringify(playerObj));
       // await redis.hset(`game:${gameCode}:scores`, userId, 0);
-      await redis.hsetnx(`game:${gameCode}:scores`, userId, 0);
+      await redis.hsetnx(`game:${gameCode.toUpperCase()}:scores`, userId, 0);
     } else {
       // Player rejoining – update username if it changed (keep isHost/ready flags)
       const playerObj = JSON.parse(existingData);
@@ -270,7 +304,7 @@ io.on("connection", (socket) => {
           )
           .join("\n")
     );
-    io.to(gameCode).emit("playersUpdate", playerList);
+    io.to(gameCode.toUpperCase()).emit("playersUpdate", playerList);
 
     // 6) Now send full state back *just* to this socket for rehydration:
     const [
@@ -283,14 +317,14 @@ io.on("connection", (socket) => {
       rawStoryList,
       phaseValue,
     ] = await Promise.all([
-      redis.exists(`game:${gameCode}:storyList`),
-      redis.get(`game:${gameCode}:currentRound`),
-      redis.get(`game:${gameCode}:currentAuthor`),
-      redis.hgetall(`game:${gameCode}:votes`),
-      redis.hgetall(`game:${gameCode}:scores`),
-      redis.hgetall(`game:${gameCode}:initialPlayers`),
-      redis.get(`game:${gameCode}:storyList`),
-      redis.get(`game:${gameCode}:phase`),
+      redis.exists(`game:${gameCode.toUpperCase()}:storyList`),
+      redis.get(`game:${gameCode.toUpperCase()}:currentRound`),
+      redis.get(`game:${gameCode.toUpperCase()}:currentAuthor`),
+      redis.hgetall(`game:${gameCode.toUpperCase()}:votes`),
+      redis.hgetall(`game:${gameCode.toUpperCase()}:scores`),
+      redis.hgetall(`game:${gameCode.toUpperCase()}:initialPlayers`),
+      redis.get(`game:${gameCode.toUpperCase()}:storyList`),
+      redis.get(`game:${gameCode.toUpperCase()}:phase`),
     ]);
 
     // parse out the current story text if the game’s started
@@ -329,24 +363,29 @@ io.on("connection", (socket) => {
 
   socket.on("submitStories", async ({ pin, stories }) => {
     await redis.hset(
-      `game:${pin}:stories`,
+      `game:${pin.toUpperCase()}:stories`,
       socket.data.userId,
       JSON.stringify(stories)
     );
-    await redis.sadd(`game:${pin}:submissions`, socket.data.userId);
+    await redis.sadd(
+      `game:${pin.toUpperCase()}:submissions`,
+      socket.data.userId
+    );
 
     const playerData = JSON.parse(
-      await redis.hget(`game:${pin}:players`, socket.data.userId)
+      await redis.hget(`game:${pin.toUpperCase()}:players`, socket.data.userId)
     );
     playerData.ready = true;
     await redis.hset(
-      `game:${pin}:players`,
+      `game:${pin.toUpperCase()}:players`,
       socket.data.userId,
       JSON.stringify(playerData)
     );
 
     // re-broadcast playersUpdate
-    const playersRaw2 = await redis.hgetall(`game:${pin}:players`);
+    const playersRaw2 = await redis.hgetall(
+      `game:${pin.toUpperCase()}:players`
+    );
     // console.log(playersRaw2);
     const updatedList = Object.entries(playersRaw2).map(([id, str]) => {
       const p = JSON.parse(str);
@@ -358,13 +397,13 @@ io.on("connection", (socket) => {
         isConnected: p.isConnected,
       };
     });
-    io.to(pin).emit("playersUpdate", updatedList);
+    io.to(pin.toUpperCase()).emit("playersUpdate", updatedList);
 
     // optional storiesSubmitted
-    const subCount = await redis.scard(`game:${pin}:submissions`);
+    const subCount = await redis.scard(`game:${pin.toUpperCase()}:submissions`);
     const totalPlayers = Object.keys(playersRaw2).length;
     if (subCount === totalPlayers) {
-      io.to(pin).emit("storiesSubmitted");
+      io.to(pin.toUpperCase()).emit("storiesSubmitted");
     }
   });
 
@@ -392,6 +431,7 @@ io.on("connection", (socket) => {
   // In your server.js (ensure shuffle() is defined above this handler):
 
   socket.on("startGame", async (pin) => {
+    pin = pin.toUpperCase();
     // Only the host may start the game
     const host = await redis.get(`game:${pin}:host`);
     if (socket.data.userId !== host) return;

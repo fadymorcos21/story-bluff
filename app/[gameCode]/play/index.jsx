@@ -21,7 +21,7 @@ import { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function Play() {
-  const { state, user, gameCode } = useGame();
+  const { state, user, gameCode, story } = useGame();
   const router = useRouter();
   console.log(`[PLAY ${state.phase}] rendering phase`, state.phase);
 
