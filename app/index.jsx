@@ -46,7 +46,7 @@ export default function Home() {
     });
   }, []);
 
-  const [isKeyboardVisible, setKeyboardVisible] = useState("");
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
   const anim = useRef(new Animated.Value(0)).current;
 
@@ -309,39 +309,34 @@ export default function Home() {
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.screen}>
-          {/* Top logo/mascot block */}
-          <View style={styles.heroBlock}>
+          {/* Top logo block */}
+          <View
+            style={[styles.heroBlock, { bottom: isKeyboardVisible ? 20 : 0 }]}
+          >
             <Image
               source={require("../assets/story_bluff_logo.png")}
               style={styles.logo}
               resizeMode="contain"
             />
-            <Image
-              source={require("../assets/story_bluff_mascot.png")}
-              style={styles.mascot}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Create button */}
-          <View style={styles.createBlock}>
-            <TouchableOpacity
-              style={styles.createBtnContainer}
-              onLayout={(e) => setCreateBtnWidth(e.nativeEvent.layout.width)}
-              onPress={handleCreatePress}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.createBtnText}>Create Game</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Join row (animated input + button) */}
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "position" : "height"}
-            keyboardVerticalOffset={Platform.select({ ios: 50, android: 0 })}
+            keyboardVerticalOffset={Platform.select({ ios: 8, android: 0 })}
             style={styles.joinKAV}
-            enabled={isKeyboardVisible === "code"}
+            enabled={isKeyboardVisible}
           >
+            <View style={styles.joinRow}>
+              <TouchableOpacity
+                style={styles.createBtnContainer}
+                onLayout={(e) => setCreateBtnWidth(e.nativeEvent.layout.width)}
+                onPress={handleCreatePress}
+                activeOpacity={0.9}
+              >
+                <Text style={styles.createBtnText}>Create Game</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.joinRow}>
               <Animated.View
                 style={[
@@ -357,8 +352,8 @@ export default function Home() {
                   placeholderTextColor="#788FD1"
                   style={styles.codeInput}
                   returnKeyType="done"
-                  onFocus={() => setKeyboardVisible("code")}
-                  onBlur={() => setKeyboardVisible("")}
+                  onFocus={() => setKeyboardVisible(true)}
+                  onBlur={() => setKeyboardVisible(false)}
                 />
               </Animated.View>
 
@@ -378,15 +373,7 @@ export default function Home() {
                 </TouchableOpacity>
               </Animated.View>
             </View>
-          </KeyboardAvoidingView>
 
-          {/* Username input */}
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "position" : "height"}
-            keyboardVerticalOffset={Platform.select({ ios: 50, android: 0 })}
-            style={styles.usernameKAV}
-            enabled={usernameActive}
-          >
             <TextInput
               value={username}
               onChangeText={setUsername}
@@ -401,8 +388,8 @@ export default function Home() {
                   ? styles.usernameInputActive
                   : styles.usernameInputInactive,
               ]}
-              onFocus={() => setKeyboardVisible("username")}
-              onBlur={() => setKeyboardVisible("")}
+              onFocus={() => setKeyboardVisible(true)}
+              onBlur={() => setKeyboardVisible(false)}
             />
           </KeyboardAvoidingView>
 
@@ -439,7 +426,7 @@ export default function Home() {
   );
 }
 
-const MAX_W_MD = 448;
+const MAX_W_MD = 548;
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -448,41 +435,36 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
-    // paddingVertical: 28, // (tailwind py-7) — commented since original had a typo; leaving layout untouched
   },
 
   // Top block
   heroBlock: {
-    flex: 5,
+    flex: 3,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 40, // px-10
   },
+
   logo: {
-    width: 288,
-    height: 200,
-    marginBottom: 32,
+    width: "100%",
+    maxWidth: MAX_W_MD,
+    height: MAX_W_MD * (200 / 288), // only works if you always clamp width
   },
   mascot: {
     width: 150,
     height: 150,
   },
 
-  // Create button area
-  createBlock: {
-    flex: 0.8,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
   createBtnContainer: {
     alignSelf: "center",
     width: "100%",
     maxWidth: MAX_W_MD,
     backgroundColor: "#3B82F6", // blue-500
-    paddingVertical: 16, // py-4
+    alignSelf: "center",
+    justifyContent: "center",
+    height: 48,
+    paddingVertical: 0, // py-4
     borderRadius: 9999, // rounded-full
-    marginBottom: 16,
     elevation: 6,
     shadowColor: "#000",
     shadowOpacity: 0.2,
@@ -496,17 +478,45 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
+  joinBtnWrap: {
+    position: "absolute",
+    right: 0,
+    height: 48,
+    backgroundColor: "#ec4899", // pink-500
+    borderRadius: 9999,
+  },
+  joinBtnTouch: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  joinBtnText: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "600",
+  },
+
   // Join row (animated)
   joinKAV: {
-    flex: 0.8,
-    justifyContent: "center",
+    flex: 3,
+    justifyContent: "space-evenly",
+    bottom: 50,
     paddingHorizontal: 40,
+  },
+  centerInner: {
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: MAX_W_MD,
+    flexGrow: 1,
+    justifyContent: "space-evenly", // equal space above/between/below
+    alignItems: "stretch",
+    minHeight: 220, // tune spacing tight/loose (200–260)
   },
   joinRow: {
     width: "100%",
     maxWidth: MAX_W_MD,
     height: 48, // h-12
-    marginBottom: 24, // mb-6
+    marginBottom: 16,
     position: "relative",
     alignSelf: "center",
   },
@@ -527,23 +537,6 @@ const styles = StyleSheet.create({
   codeInput: {
     color: "#788FD1",
     fontSize: 20, // text-xl
-  },
-  joinBtnWrap: {
-    position: "absolute",
-    right: 0,
-    height: 48,
-    backgroundColor: "#ec4899", // pink-500
-    borderRadius: 9999,
-  },
-  joinBtnTouch: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  joinBtnText: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "600",
   },
 
   // Username input block
@@ -574,7 +567,7 @@ const styles = StyleSheet.create({
 
   // Bottom bar
   bottomBar: {
-    flex: 0.9,
+    flex: 1,
     justifyContent: "flex-end",
     paddingBottom: 24, // pb-6
     paddingHorizontal: 40, // px-10

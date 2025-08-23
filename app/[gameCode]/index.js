@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 20,
-    bottom: 30,
+    bottom: 50,
   },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 12 },
   modalInput: {
