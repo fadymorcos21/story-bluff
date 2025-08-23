@@ -349,6 +349,9 @@ export default function Home() {
                   value={code}
                   onChangeText={setCode}
                   placeholder="Enter code"
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  spellCheck={false}
                   placeholderTextColor="#788FD1"
                   style={styles.codeInput}
                   returnKeyType="done"
@@ -378,6 +381,8 @@ export default function Home() {
               value={username}
               onChangeText={setUsername}
               placeholder="Enter Username"
+              autoCorrect={false}
+              spellCheck={false}
               placeholderTextColor={
                 usernameActive ? "rgba(0,0,0,0.64)" : "rgba(255,255,255,0.6)"
               }
